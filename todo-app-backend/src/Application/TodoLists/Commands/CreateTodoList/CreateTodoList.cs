@@ -1,0 +1,40 @@
+﻿using todo_app_backend.Application.Common.Interfaces;
+using todo_app_backend.Domain.Entities;
+using todo_app_backend.Domain.ValueObjects;
+
+namespace todo_app_backend.Application.TodoLists.Commands.CreateTodoList;
+
+public record CreateTodoListCommand : IRequest<int>
+{
+    public string? Title { get; init; }
+
+    public string? Colour { get; init; }
+
+    public DateTime? DueDate { get; init; }
+}
+
+public class CreateTodoListCommandHandler : IRequestHandler<CreateTodoListCommand, int>
+{
+    private readonly IApplicationDbContext _context;
+
+    public CreateTodoListCommandHandler(IApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<int> Handle(CreateTodoListCommand request, CancellationToken cancellationToken)
+    {
+        var entity = new TodoList
+        {
+            Title = request.Title,
+            Colour = Colour.From(request.Colour ?? Colour.Grey),
+            DueDate = request.DueDate
+        };
+
+        _context.TodoLists.Add(entity);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        return entity.Id;
+    }
+}
