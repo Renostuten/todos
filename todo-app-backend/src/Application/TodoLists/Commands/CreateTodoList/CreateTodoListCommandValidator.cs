@@ -1,14 +1,17 @@
-﻿using todo_app_backend.Application.Common.Interfaces;
+﻿using System.Configuration;
+using todo_app_backend.Application.Common.Interfaces;
 
 namespace todo_app_backend.Application.TodoLists.Commands.CreateTodoList;
 
 public class CreateTodoListCommandValidator : AbstractValidator<CreateTodoListCommand>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUser _user;
 
-    public CreateTodoListCommandValidator(IApplicationDbContext context)
+    public CreateTodoListCommandValidator(IApplicationDbContext context, IUser user)
     {
         _context = context;
+        _user = user;
 
         RuleFor(v => v.Title)
             .NotEmpty()
@@ -21,6 +24,6 @@ public class CreateTodoListCommandValidator : AbstractValidator<CreateTodoListCo
     public async Task<bool> BeUniqueTitle(string title, CancellationToken cancellationToken)
     {
         return !await _context.TodoLists
-            .AnyAsync(l => l.Title == title, cancellationToken);
+            .AnyAsync(l => l.Title == title && l.CreatedBy == _user.Id, cancellationToken);
     }
 }
