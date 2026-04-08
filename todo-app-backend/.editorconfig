@@ -16,6 +16,10 @@ indent_size = 2
 [*.{json,config}]
 indent_size = 2
 
+# react files
+[*.{jsx,tsx}]
+indent_size = 2
+
 # C# files
 [*.cs]
 
