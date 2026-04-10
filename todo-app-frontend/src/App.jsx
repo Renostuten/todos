@@ -16,6 +16,7 @@ import {
 import CreateListForm from './components/CreateListForm'
 import Login from './components/Login'
 import TodoListCard from './components/TodoListCard'
+import Chart from './components/Chart'
 
 function App() {
   const [data, setData] = useState(null)
@@ -378,6 +379,8 @@ function App() {
             )}
             {loginError && <div className="login-error">{loginError}</div>}
           </div>
+
+          <Chart lists={data?.lists ?? []} />
 
           <input
             type="text"
