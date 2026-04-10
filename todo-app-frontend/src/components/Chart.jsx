@@ -1,4 +1,4 @@
-import { PieChart, Pie, Sector, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Sector, Tooltip, Legend, ResponsiveContainer, XAxis, YAxis, BarChart, Bar } from "recharts";
 
 function CustomSector(props) {
   return <Sector {...props} fill={props.payload.colour} />;
@@ -26,6 +26,14 @@ function renderCustomLabel(props) {
   );
 }
 
+function isListFinished(list) {
+  if (!list.items || list.items.length === 0) {
+    return false;
+  }
+
+  return list.items.every((item) => item.done);
+}
+
 export default function Chart({ lists }) {
   const colourMap = {
     '#78909C': 'Grey',
@@ -49,25 +57,45 @@ export default function Chart({ lists }) {
     return <p>No items to display</p>;
   }
 
+  const completedCount = lists.filter((list) => isListFinished(list)).length;
+  const unfinishedCount = lists.length - completedCount;
+
+  const completionData = [
+    { name: "Finished", value: completedCount, fill: "#4CAF50" },
+    { name: "Unfinished", value: unfinishedCount, fill: "#E05C4D" },
+  ];
+
   return (
-    <div style={{ width: "100%", maxWidth: "500px", height: "300px" }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={data}
-            dataKey="value"
-            nameKey="name"
-            cx="50%"
-            cy="50%"
-            outerRadius={100}
-            label={renderCustomLabel}
-            shape={CustomSector}
-          >
-          </Pie>
-          <Tooltip />
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="chart-container">
+      <div className="chart-box">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="name"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              label={renderCustomLabel}
+              shape={CustomSector}
+            >
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="chart-box">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={completionData}>
+            <XAxis dataKey="name" />
+            <YAxis allowDecimals={false} />
+            <Tooltip />
+            <Bar dataKey="value" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
