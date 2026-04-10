@@ -161,9 +161,25 @@
   }
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
 .todo-app {
   padding: 20px;
-  min-height: 100vh;
+  min-height: 130vh;
+  width: 100%;
   background: #f6f7fb;
 }
 
