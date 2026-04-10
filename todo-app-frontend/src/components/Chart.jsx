@@ -68,6 +68,7 @@ export default function Chart({ lists }) {
   return (
     <div className="chart-container">
       <div className="chart-box">
+        <h3 className="chart-title">Lists by Colour</h3>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -87,6 +88,7 @@ export default function Chart({ lists }) {
         </ResponsiveContainer>
       </div>
       <div className="chart-box">
+        <h3 className="chart-title">Completion Status</h3>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={completionData}>
             <XAxis dataKey="name" />
