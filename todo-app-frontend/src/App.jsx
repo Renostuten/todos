@@ -222,7 +222,8 @@ function App() {
       return 0;
     });
 
-  async function handleCreateList() {
+  async function handleCreateList(event) {
+    event.preventDefault();
     if (!title) {
       alert('Please enter a title for the todo list.');
       return;
@@ -255,7 +256,8 @@ function App() {
     });
   }
 
-  async function handleUpdateList() {
+  async function handleUpdateList(event) {
+    event.preventDefault();
     if (!editForm.title.trim()) {
       alert('Please enter a title for the todo list.');
       return;
@@ -275,7 +277,8 @@ function App() {
     }
   }
 
-  async function handleDeleteList(id) {
+  async function handleDeleteList(event, id) {
+    event.preventDefault();
     const confirmed = window.confirm('Are you sure you want to delete this todo list?');
     if (!confirmed) {
       return;
@@ -302,7 +305,8 @@ function App() {
     });
   }
 
-  async function handleCreateItem() {
+  async function handleCreateItem(event) {
+    event.preventDefault();
     if (!addItemForm.title.trim()) {
       alert('Please enter a title for the todo item.');
       return;
@@ -334,7 +338,8 @@ function App() {
     });
   }
 
-  async function handleUpdateItem() {
+  async function handleUpdateItem(event) {
+    event.preventDefault();
     if (!editItemForm.title.trim()) {
       alert('Please enter a title for the todo item.');
       return;
@@ -360,7 +365,8 @@ function App() {
     }
   }
 
-  async function handleDeleteItem(id) {
+  async function handleDeleteItem(event, id) {
+    event.preventDefault();
     const confirmed = window.confirm('Are you sure you want to delete this todo item?');
     if (!confirmed) {
       return;

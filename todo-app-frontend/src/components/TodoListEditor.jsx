@@ -24,7 +24,7 @@ export default function TodoListEditor({
       <button onClick={() => handleStartAddItem(list)}>Add Todo</button>
 
       {addItemtoListId === list.id && (
-        <form onSubmit={handleCreateItem} className='todo-list-form'>
+        <form onSubmit={(e) => handleCreateItem(e)} className='todo-list-form'>
           <div style={{ marginBottom: '8px' }}>
             <input
               type="text"
@@ -46,7 +46,7 @@ export default function TodoListEditor({
       )}
 
       {editingListId === list.id && (
-        <form onSubmit={handleUpdateList} className="todo-list-form">
+        <form onSubmit={(e) => handleUpdateList(e)} className="todo-list-form">
           <div style={{ marginBottom: '8px' }}>
             <input
               type="text"

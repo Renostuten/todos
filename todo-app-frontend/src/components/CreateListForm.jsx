@@ -16,8 +16,7 @@ export default function CreateListForm({
       <h2>Create New Todo List</h2>
       <form
         onSubmit={(e) => {
-          e.preventDefault()
-          handleCreateList()
+          handleCreateList(e)
         }}
         className="form-grid"
       >

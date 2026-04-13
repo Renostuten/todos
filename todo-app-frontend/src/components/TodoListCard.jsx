@@ -46,7 +46,7 @@ export default function TodoListCard({
       style={{ borderColor: list.colour }}
     >
       <button
-        onClick={() => handleDeleteList(list.id)}
+        onClick={(e) => handleDeleteList(e, list.id)}
         className="todo-list-delete-button"
         title="Delete list"
       >

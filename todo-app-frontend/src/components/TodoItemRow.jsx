@@ -22,7 +22,7 @@ export default function TodoItemRow({
   return (
     <li className="todo-item">
       {editItemId === item.id ? (
-        <form onSubmit={handleUpdateItem} className="todo-item-edit">
+        <form onSubmit={(e) => handleUpdateItem(e)} className="todo-item-edit">
           <div className="todo-item-edit-top">
             <input
               type="text"
@@ -66,13 +66,13 @@ export default function TodoItemRow({
           <div className="todo-item-actions">
             <button onClick={() => handleStartEditItem(item)} title="Edit item">✎</button>
             <button onClick={() => handleStartEditItemDetails(item)} title="Edit details">⚙</button>
-            <button onClick={() => handleDeleteItem(item.id)} title="Delete item">🗑</button>
+            <button onClick={(e) => handleDeleteItem(e, item.id)} title="Delete item">🗑</button>
           </div>
         </div>
       )}
 
       {editItemDetailsId === item.id && (
-        <form onSubmit={handleUpdateItemDetails} className="todo-item-edit-details">
+        <form onSubmit={(e) => handleUpdateItemDetails(e)} className="todo-item-edit-details">
           <label className='todo-item-edit-details-group'>
             Priority
             <select
