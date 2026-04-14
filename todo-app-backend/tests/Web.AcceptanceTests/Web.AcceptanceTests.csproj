@@ -4,6 +4,7 @@
         <RootNamespace>todo_app_backend.Web.AcceptanceTests</RootNamespace>
         <AssemblyName>todo_app_backend.Web.AcceptanceTests</AssemblyName>
         <ReqnrollUseIntermediateOutputPathForCodeBehind>true</ReqnrollUseIntermediateOutputPathForCodeBehind>
+        <!-- currently disabled due to lack of importance for this project -->
         <IsTestProject>false</IsTestProject>
     </PropertyGroup>
 
