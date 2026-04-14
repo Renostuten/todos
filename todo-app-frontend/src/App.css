@@ -341,7 +341,7 @@ body {
 
 .todo-toolbar {
   display: flex;
-  width: 60%;
+  width: min(100%, 720px);
   gap: 10px;
   align-items: center;
   justify-content: center;
@@ -691,6 +691,19 @@ body {
   border-radius: 6px;
 }
 
+.todo-list-form textarea,
+.todo-item-edit textarea,
+.todo-item-edit-details textarea,
+.todo-list-form input,
+.todo-list-form select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
 .todo-item-edit-top {
   display: flex;
   gap: 8px;
@@ -698,7 +711,7 @@ body {
   align-items: center;
 }
 
-.todo-list-card button {
+.todo-list-card button:not(.todo-list-delete-button) {
   margin-top: 10px;
   border: 1px solid #ced4df;
   background: #fff;
@@ -710,6 +723,30 @@ body {
 
 .todo-list-card button:hover {
   background: #f2f4f8;
+}
+
+@media (max-width: 900px) {
+  .todo-toolbar {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-wrapper {
+    display: block;
+    width: 100%;
+  }
+
+  .filter-wrapper > button {
+    width: 100%;
+  }
+
+  .filter-panel {
+    position: static;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 8px;
+  }
 }
 
 .ticks {
