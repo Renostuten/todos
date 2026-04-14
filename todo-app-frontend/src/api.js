@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:5031/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5031/api';
 
 function fetchWithCredentials(url, options = {}) {
   return fetch(url, {
@@ -8,7 +8,7 @@ function fetchWithCredentials(url, options = {}) {
 }
 
 export async function getTodoLists() {
-  const response = await fetchWithCredentials(`${BASE_URL}/todolists`);
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todolists`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch todo lists');
@@ -18,7 +18,7 @@ export async function getTodoLists() {
 }
 
 export async function getTodoListById(id) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todolists/${id}`);
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todolists/${id}`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch todo list');
@@ -28,7 +28,7 @@ export async function getTodoListById(id) {
 }
 
 export async function getCurrentUser() {
-  const response = await fetchWithCredentials(`${BASE_URL}/auth/me`);
+  const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`);
 
   if (!response.ok) {
     throw new Error('Not authenticated');
@@ -38,7 +38,7 @@ export async function getCurrentUser() {
 }
 
 export async function createTodoLists(newList) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todolists`, {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todolists`, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ export async function createTodoLists(newList) {
 }
 
 export async function updateTodoLists(newList) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todolists/${newList.id}`, {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todolists/${newList.id}`, {
     method: 'PUT',
     headers: { 
       'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export async function updateTodoLists(newList) {
 }
 
 export async function deleteTodoLists(id) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todolists/${id}`, {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todolists/${id}`, {
     method: 'DELETE',
   });
 
@@ -78,7 +78,7 @@ export async function deleteTodoLists(id) {
 }
 
 export async function createTodoItem(newItem) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todoitems`, {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todoitems`, {
     method: 'POST',
     headers: { 
       'Content-Type': 'application/json',
@@ -93,7 +93,7 @@ export async function createTodoItem(newItem) {
 }
 
 export async function updateTodoItem(updatedItem) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todoitems/${updatedItem.id}`, {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todoitems/${updatedItem.id}`, {
     method: 'PUT',
     headers: { 
       'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ export async function updateTodoItem(updatedItem) {
 }
 
 export async function deleteTodoItem(id) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todoitems/${id}`, {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todoitems/${id}`, {
     method: 'DELETE',
   });
 
@@ -117,7 +117,7 @@ export async function deleteTodoItem(id) {
 }
 
 export async function updateTodoItemDetails(updatedItem) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todoitems/updatedetail/${updatedItem.id}`, {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todoitems/updatedetail/${updatedItem.id}`, {
     method: 'PATCH',
     headers: { 
       'Content-Type': 'application/json',
@@ -131,7 +131,7 @@ export async function updateTodoItemDetails(updatedItem) {
 }
 
 export async function toggleTodoItem(updatedItem) {
-  const response = await fetchWithCredentials(`${BASE_URL}/todoitems/toggle/${updatedItem.id}`, {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/todoitems/toggle/${updatedItem.id}`, {
     method: 'PATCH',
     headers: { 
       'Content-Type': 'application/json',
@@ -141,5 +141,35 @@ export async function toggleTodoItem(updatedItem) {
 
   if (!response.ok) {
     throw new Error('Failed to update todo item');
+  }
+}
+
+export async function loginWithGoogleCredential(credential) {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/auth/google`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ credential }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Google login failed');
+  }
+
+  return response.json();
+}
+
+export async function logoutCurrentUser() {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/Users/logout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    throw new Error('Logout failed');
   }
 }
