@@ -6,8 +6,7 @@ export default function TodoListCard({
   list,
   priorityMap,
   data,
-  editingListId,
-  addItemtoListId,
+  activeForm,
   editItemId,
   editItemDetailsId,
   editForm,
@@ -28,8 +27,7 @@ export default function TodoListCard({
   handleStartEditItemDetails,
   handleUpdateItemDetails,
   handleUpdateList,
-  setAddItemToListId,
-  setEditingListId,
+  setActiveForm,
   setEditItemId,
   setEditItemDetailsId,
   handleToggleItem,
@@ -66,16 +64,14 @@ export default function TodoListCard({
       <TodoListEditor
         list={list}
         data={data}
-        editingListId={editingListId}
-        addItemtoListId={addItemtoListId}
+        activeForm={activeForm}
         editForm={editForm}
         addItemForm={addItemForm}
         handleStartEdit={handleStartEdit}
         handleStartAddItem={handleStartAddItem}
         handleCreateItem={handleCreateItem}
         handleUpdateList={handleUpdateList}
-        setAddItemToListId={setAddItemToListId}
-        setEditingListId={setEditingListId}
+        setActiveForm={setActiveForm}
         setEditForm={setEditForm}
         setAddItemForm={setAddItemForm}
       />

@@ -31,15 +31,18 @@ function App() {
   const [loginError, setLoginError] = useState('')
   const [isCheckingSession, setIsCheckingSession] = useState(true)
 
-  const [editingListId, setEditingListId] = useState(null);
+  const [activeForm, setActiveForm] = useState({
+    type: null,
+    listId: null,
+  });
+
   const [editForm, setEditForm] = useState({
     id: 0,
     title: "",
     colour: "#4CAF50",
     dueDate: "",
   });
-
-  const [addItemtoListId, setAddItemToListId] = useState(null);
+  
   const [addItemForm, setAddItemForm] = useState({
     listId: 0,
     title: "",
@@ -247,7 +250,10 @@ function App() {
   }
 
   function handleStartEdit(list) {
-    setEditingListId(list.id);
+    setActiveForm({
+      type: 'editList',
+      listId: list.id
+    });
     setEditForm({
       id: list.id,
       title: list.title,
@@ -271,6 +277,7 @@ function App() {
         dueDate: editForm.dueDate || null,
       };
       await updateTodoLists(newList);
+      setActiveForm({ type: null, listId: null });
       await loadTodos();
     } catch (error) {
       console.error('Error updating todo list:', error);
@@ -287,8 +294,8 @@ function App() {
     try {
       await deleteTodoLists(id);
 
-      if (editingListId === id) {
-        setEditingListId(null);
+      if (activeForm.listId === id) {
+        setActiveForm({ type: null, listId: null });
       }
 
       await loadTodos();
@@ -298,7 +305,10 @@ function App() {
   }
 
   function handleStartAddItem(list) {
-    setAddItemToListId(list.id);
+    setActiveForm({
+      type: 'addItem',
+      listId: list.id
+    });
     setAddItemForm({
       listId: list.id,
       title: "",
@@ -321,7 +331,7 @@ function App() {
         listId: 0,
         title: "",
       });
-      setAddItemToListId(null);
+      setActiveForm({ type: null, listId: null });
       await loadTodos();
     } catch (error) {
       console.error('Error creating todo item:', error);
@@ -513,10 +523,9 @@ function App() {
                 list={list}
                 priorityMap={priorityMap}
               data={data}
-              editingListId={editingListId}
-              addItemtoListId={addItemtoListId}
               editItemId={editItemId}
               editItemDetailsId={editItemDetailsId}
+              activeForm={activeForm}
               editForm={editForm}
               addItemForm={addItemForm}
               editItemForm={editItemForm}
@@ -535,8 +544,7 @@ function App() {
               handleStartEditItemDetails={handleStartEditItemDetails}
               handleUpdateItemDetails={handleUpdateItemDetails}
               handleUpdateList={handleUpdateList}
-              setAddItemToListId={setAddItemToListId}
-              setEditingListId={setEditingListId}
+              setActiveForm={setActiveForm}
               setEditItemId={setEditItemId}
               setEditItemDetailsId={setEditItemDetailsId}
               handleToggleItem={handleToggleItem}

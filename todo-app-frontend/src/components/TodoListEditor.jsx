@@ -3,16 +3,14 @@ import React from 'react'
 export default function TodoListEditor({
   list,
   data,
-  editingListId,
-  addItemtoListId,
+  activeForm,
   editForm,
   addItemForm,
   handleStartEdit,
   handleStartAddItem,
   handleCreateItem,
   handleUpdateList,
-  setAddItemToListId,
-  setEditingListId,
+  setActiveForm,
   setEditForm,
   setAddItemForm,
 }) {
@@ -23,7 +21,7 @@ export default function TodoListEditor({
       </button>
       <button onClick={() => handleStartAddItem(list)}>Add Todo</button>
 
-      {addItemtoListId === list.id && (
+      {activeForm.type === 'addItem' && activeForm.listId === list.id && (
         <form onSubmit={(e) => handleCreateItem(e)} className='todo-list-form'>
           <div style={{ marginBottom: '8px' }}>
             <textarea
@@ -37,7 +35,7 @@ export default function TodoListEditor({
           <button type="submit">Create Todo</button>
           <button
             type="button"
-            onClick={() => setAddItemToListId(null)}
+            onClick={() => setActiveForm({ type: null, listId: null })}
             style={{ marginLeft: '8px' }}
           >
             Cancel
@@ -45,7 +43,7 @@ export default function TodoListEditor({
         </form>
       )}
 
-      {editingListId === list.id && (
+      {activeForm.type === 'editList' && activeForm.listId === list.id && (
         <form onSubmit={(e) => handleUpdateList(e)} className="todo-list-form">
           <div style={{ marginBottom: '8px' }}>
             <textarea
@@ -80,7 +78,7 @@ export default function TodoListEditor({
           <button type="submit">Save</button>
           <button
             type="button"
-            onClick={() => setEditingListId(null)}
+            onClick={() => setActiveForm({ type: null, listId: null })}
             style={{ marginLeft: '8px' }}
           >
             Cancel
