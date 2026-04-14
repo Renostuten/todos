@@ -26,7 +26,7 @@ export default function TodoListEditor({
       {addItemtoListId === list.id && (
         <form onSubmit={(e) => handleCreateItem(e)} className='todo-list-form'>
           <div style={{ marginBottom: '8px' }}>
-            <input
+            <textarea
               type="text"
               value={addItemForm.title}
               onChange={(e) => setAddItemForm({ ...addItemForm, title: e.target.value })}
@@ -48,7 +48,7 @@ export default function TodoListEditor({
       {editingListId === list.id && (
         <form onSubmit={(e) => handleUpdateList(e)} className="todo-list-form">
           <div style={{ marginBottom: '8px' }}>
-            <input
+            <textarea
               type="text"
               value={editForm.title}
               onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}

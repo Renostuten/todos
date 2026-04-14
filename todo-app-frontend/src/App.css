@@ -328,6 +328,7 @@ body {
   max-width: 500px;
   min-width: 320px;
   height: 300px;
+  margin-bottom: 20px;
 }
 
 .chart-title {

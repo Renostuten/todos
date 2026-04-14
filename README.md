@@ -304,6 +304,7 @@ npm run lint
 - Multi-language support
 - Task collaboration and sharing
 - Email notifications
+- UI improvements
 
 ---
 

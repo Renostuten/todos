@@ -24,19 +24,19 @@ export default function TodoItemRow({
       {editItemId === item.id ? (
         <form onSubmit={(e) => handleUpdateItem(e)} className="todo-item-edit">
           <div className="todo-item-edit-top">
-            <input
+            <textarea
               type="text"
               value={editItemForm.title}
               onChange={(e) => setEditItemForm({ ...editItemForm, title: e.target.value })}
               placeholder="Item title"
             />
             <label>
+              Done
               <input
                 type="checkbox"
                 checked={editItemForm.done}
                 onChange={(e) => setEditItemForm({ ...editItemForm, done: e.target.checked })}
               />
-              Done
             </label>
           </div>
 
@@ -92,7 +92,7 @@ export default function TodoItemRow({
 
           <label className='todo-item-edit-details-group'>
             Note
-            <input
+            <textarea
               className="todo-item-edit-details-input"
               type="text"
               value={editItemDetailsForm.note}
