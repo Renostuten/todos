@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react'
+import { loginWithGoogleCredential } from '../api'
 
 export default function Login({ onLoginSuccess, onLoginError }) {
   const buttonRef = useRef(null)
@@ -15,22 +16,7 @@ export default function Login({ onLoginSuccess, onLoginError }) {
       client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       callback: async (response) => {
         try {
-          const res = await fetch("http://localhost:5031/api/auth/google", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              credential: response.credential,
-            }),
-          });
-
-          if (!res.ok) {
-            throw new Error("Google login failed");
-          }
-
-          const data = await res.json();
+          const data = await loginWithGoogleCredential(response.credential)
           onLoginSuccess?.(data);
         } catch (error) {
             console.error(error)
@@ -50,6 +36,10 @@ export default function Login({ onLoginSuccess, onLoginError }) {
     initializeGoogle()
     const intervalId = window.setInterval(() => {
       initializeGoogle()
+
+      if (initializedRef.current) {
+        window.clearInterval(intervalId)
+      }
     }, 250)
 
     return () => window.clearInterval(intervalId)
