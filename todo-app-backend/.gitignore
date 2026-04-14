@@ -496,3 +496,6 @@ README.md
 
 # dead files
 src/Web/nul
+
+# coverage reports from functional tests
+tests/Application.FunctionalTests/coveragereport

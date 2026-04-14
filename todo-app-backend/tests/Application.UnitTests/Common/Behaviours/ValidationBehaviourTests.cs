@@ -3,7 +3,7 @@ using MediatR;
 using NUnit.Framework;
 using Shouldly;
 using todo_app_backend.Application.Common.Behaviours;
-using todo_app_backend.Application.Common.Exceptions;
+using ApplicationValidationException = todo_app_backend.Application.Common.Exceptions.ValidationException;
 
 namespace todo_app_backend.Application.UnitTests.Common.Behaviours;
 
@@ -17,7 +17,7 @@ public class ValidationBehaviourTests
 
         var response = await behaviour.Handle(
             new SampleRequest { Name = string.Empty },
-            () =>
+            _ =>
             {
                 nextWasCalled = true;
                 return Task.FromResult(Unit.Value);
@@ -37,7 +37,7 @@ public class ValidationBehaviourTests
 
         await behaviour.Handle(
             new SampleRequest { Name = "valid" },
-            () =>
+            _ =>
             {
                 nextWasCalled = true;
                 return Task.FromResult(Unit.Value);
@@ -48,18 +48,19 @@ public class ValidationBehaviourTests
     }
 
     [Test]
-    public void ShouldThrowValidationExceptionWhenValidationFails()
+    public async Task ShouldThrowValidationExceptionWhenValidationFails()
     {
         var validators = new[] { new SampleRequestValidator() };
         var behaviour = new ValidationBehaviour<SampleRequest, Unit>(validators);
 
-        Should.ThrowAsync<ValidationException>(() => behaviour.Handle(
-            new SampleRequest { Name = string.Empty },
-            () => Task.FromResult(Unit.Value),
-            CancellationToken.None));
+        await Should.ThrowAsync<ApplicationValidationException>(() =>
+            behaviour.Handle(
+                new SampleRequest { Name = string.Empty },
+                _ => Task.FromResult(Unit.Value),
+                CancellationToken.None));
     }
 
-    private sealed class SampleRequest
+    private sealed class SampleRequest : IRequest<Unit>
     {
         public string Name { get; init; } = string.Empty;
     }
