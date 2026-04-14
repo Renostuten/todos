@@ -7,6 +7,7 @@ import {
   createTodoLists, 
   updateTodoLists, 
   deleteTodoLists, 
+  logoutCurrentUser,
   createTodoItem, 
   updateTodoItem, 
   deleteTodoItem, 
@@ -97,14 +98,7 @@ function App() {
 
   async function handleLogout() {
     try {
-      await fetch('http://localhost:5031/api/Users/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({}),
-      })
+      await logoutCurrentUser()
       setCurrentUser(null)
       setData(null)
       setShowCreateListForm(false)
