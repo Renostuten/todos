@@ -1,41 +1,45 @@
-import React from 'react'
+import { useState } from 'react'
 import TodoItemRow from './TodoItemRow'
 import TodoListEditor from './TodoListEditor'
 
+import { deleteTodoLists } from '../services/api'
+
+import { useTodos } from '../context/TodoContext'
+
 export default function TodoListCard({
   list,
-  priorityMap,
-  data,
-  activeForm,
-  editItemId,
-  editItemDetailsId,
-  editForm,
-  addItemForm,
-  editItemForm,
-  editItemDetailsForm,
-  setEditForm,
-  setAddItemForm,
-  setEditItemForm,
-  setEditItemDetailsForm,
-  handleDeleteList,
-  handleStartEdit,
-  handleStartAddItem,
-  handleCreateItem,
-  handleStartEditItem,
-  handleUpdateItem,
-  handleDeleteItem,
-  handleStartEditItemDetails,
-  handleUpdateItemDetails,
-  handleUpdateList,
-  setActiveForm,
-  setEditItemId,
-  setEditItemDetailsId,
-  handleToggleItem,
 }) {
+  const [activeForm, setActiveForm] = useState({
+    type: null,
+    listId: null,
+  });
+
+  const { loadTodos } = useTodos();
+
   const allDone = list.items.length > 0 && list.items.every(item => item.done);
   const completionPercentage = list.items.length === 0 
     ? 0 
     : Math.round((list.items.filter(item => item.done).length / list.items.length) * 100);
+
+  async function handleDeleteList(event, id) {
+    event.preventDefault();
+    const confirmed = window.confirm('Are you sure you want to delete this todo list?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteTodoLists(id);
+
+      if (activeForm.listId === id) {
+        setActiveForm({ type: null, listId: null });
+      }
+
+      await loadTodos();
+    } catch (error) {
+      console.error('Error deleting todo list:', error);
+    }
+  }
 
   return (
     <div
@@ -63,17 +67,8 @@ export default function TodoListCard({
 
       <TodoListEditor
         list={list}
-        data={data}
         activeForm={activeForm}
-        editForm={editForm}
-        addItemForm={addItemForm}
-        handleStartEdit={handleStartEdit}
-        handleStartAddItem={handleStartAddItem}
-        handleCreateItem={handleCreateItem}
-        handleUpdateList={handleUpdateList}
         setActiveForm={setActiveForm}
-        setEditForm={setEditForm}
-        setAddItemForm={setAddItemForm}
       />
 
       {list.items.length === 0 ? (
@@ -84,22 +79,6 @@ export default function TodoListCard({
             <TodoItemRow
               key={item.id}
               item={item}
-              data={data}
-              editItemId={editItemId}
-              editItemDetailsId={editItemDetailsId}
-              editItemForm={editItemForm}
-              editItemDetailsForm={editItemDetailsForm}
-              priorityMap={priorityMap}
-              setEditItemForm={setEditItemForm}
-              setEditItemDetailsForm={setEditItemDetailsForm}
-              setEditItemId={setEditItemId}
-              setEditItemDetailsId={setEditItemDetailsId}
-              handleStartEditItem={handleStartEditItem}
-              handleUpdateItem={handleUpdateItem}
-              handleDeleteItem={handleDeleteItem}
-              handleStartEditItemDetails={handleStartEditItemDetails}
-              handleUpdateItemDetails={handleUpdateItemDetails}
-              handleToggleItem={handleToggleItem}
             />
           ))}
         </ul>

@@ -1,14 +1,14 @@
 import { useState } from "react";
 
 export default function Filter({
-  selectedColour,
-  setSelectedColour,
-  dueDateSort,
-  setDueDateSort,
+  selectedFilterColour,
+  setSelectedFilterColour,
   startDueDate,
   setStartDueDate,
   endDueDate,
   setEndDueDate,
+  dueDateSort,
+  setDueDateSort,
   prioritySort,
   setPrioritySort,
   itemSort,
@@ -28,8 +28,8 @@ export default function Filter({
             <label>
               Colour:
               <select
-                value={selectedColour}
-                onChange={(e) => setSelectedColour(e.target.value)}
+                value={selectedFilterColour}
+                onChange={(e) => setSelectedFilterColour(e.target.value)}
               >
                 <option value="all">All</option>
                 <option value="#78909C">Grey</option>

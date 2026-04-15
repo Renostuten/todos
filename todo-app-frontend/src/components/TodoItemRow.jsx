@@ -1,24 +1,137 @@
 import React from 'react'
 
+import { useState } from 'react'
+import { updateTodoItem, deleteTodoItem, updateTodoItemDetails, toggleTodoItem } from '../services/api'
+import { useTodos } from '../context/TodoContext'
+
 export default function TodoItemRow({
   item,
-  data,
-  editItemId,
-  editItemDetailsId,
-  editItemForm,
-  editItemDetailsForm,
-  priorityMap,
-  setEditItemForm,
-  setEditItemDetailsForm,
-  setEditItemId,
-  setEditItemDetailsId,
-  handleStartEditItem,
-  handleUpdateItem,
-  handleDeleteItem,
-  handleStartEditItemDetails,
-  handleUpdateItemDetails,
-  handleToggleItem,
 }) {
+  const [editItemId, setEditItemId] = useState(null);
+  const [editItemForm, setEditItemForm] = useState({
+    id: 0,
+    listId: 0,
+    title: "",
+    done: false,
+  });
+
+  const [editItemDetailsId, setEditItemDetailsId] = useState(null);
+  const [editItemDetailsForm, setEditItemDetailsForm] = useState({
+    id: 0,
+    listId: 0,
+    priority: 0,
+    note: "",
+  });
+
+  const { data, loadTodos } = useTodos();
+
+  function handleStartEditItem(item) {
+    setEditItemId(item.id);
+    setEditItemForm({
+      id: item.id,
+      listId: item.listId,
+      title: item.title,
+      done: item.done,
+    });
+  }
+
+  async function handleUpdateItem(event) {
+    event.preventDefault();
+    if (!editItemForm.title.trim()) {
+      alert('Please enter a title for the todo item.');
+      return;
+    }
+
+    try {
+      await updateTodoItem({
+        id: editItemForm.id,
+        listId: editItemForm.listId,
+        title: editItemForm.title.trim(),
+        done: editItemForm.done,
+      });
+      setEditItemForm({
+        id: 0,
+        listId: 0,
+        title: "",
+        done: false,
+      });
+      setEditItemId(null);
+      await loadTodos();
+    } catch (error) {
+      console.error('Error updating todo item:', error);
+    }
+  }
+
+  async function handleDeleteItem(event, id) {
+    event.preventDefault();
+    const confirmed = window.confirm('Are you sure you want to delete this todo item?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteTodoItem(id);
+
+      if (editItemId === id) {
+        setEditItemId(null);
+      }
+
+      await loadTodos();
+    } catch (error) {
+      console.error('Error deleting todo item:', error);
+    }
+  }
+
+  function handleStartEditItemDetails(item) {
+      setEditItemDetailsId(item.id);
+      setEditItemDetailsForm({
+        id: item.id,
+        listId: item.listId,
+        priority: item.priority ?? 0,
+        note: item.note ?? "",
+      });
+    }
+  
+  async function handleUpdateItemDetails(event) {
+    event.preventDefault();
+
+    try {
+      await updateTodoItemDetails({
+        id: editItemDetailsForm.id,
+        listId: editItemDetailsForm.listId,
+        priority: editItemDetailsForm.priority,
+        note: editItemDetailsForm.note,
+      });
+      setEditItemDetailsForm({
+        id: 0,
+        listId: 0,
+        priority: 0,
+        note: "",
+      });
+      setEditItemDetailsId(null);
+      await loadTodos();
+    } catch (error) {
+      console.error('Error updating todo item details:', error);
+    }
+  }
+
+  async function handleToggleItem(item) {
+    try {
+      await toggleTodoItem({
+        id: item.id,
+        listId: item.listId,
+        done: !item.done,
+      });
+      await loadTodos();
+    } catch (error) {
+      console.error('Error toggling todo item:', error);
+    }
+  }
+
+  const priorityMap = Object.fromEntries(
+    data.priorityLevels.map((level) => [level.id, level.title])
+  );
+
   return (
     <li className="todo-item">
       {editItemId === item.id ? (

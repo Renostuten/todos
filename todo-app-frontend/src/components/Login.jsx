@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react'
-import { loginWithGoogleCredential } from '../api'
+import { loginWithGoogleCredential } from '../services/api'
 
 export default function Login({ onLoginSuccess, onLoginError }) {
   const buttonRef = useRef(null)
