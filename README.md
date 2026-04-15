@@ -87,7 +87,11 @@ todo-app/
 ├── todo-app-frontend/             # React + Vite frontend
 │   ├── src/
 │   │   ├── components/            # React components
-│   │   ├── api.js                 # API client
+│   │   ├── context                # Context hooks
+│   │   ├── hooks                  # Other hooks
+│   │   ├── pages                  # Display pages
+│   │   ├── services
+│   │   │   ├── api.js             # API client
 │   │   ├── App.jsx                # Main app component
 │   │   ├── App.css                # Styling
 │   │   └── main.jsx               # Entry point
