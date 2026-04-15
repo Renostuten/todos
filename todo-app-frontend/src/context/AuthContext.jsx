@@ -1,10 +1,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
+import { getCurrentUser, logoutCurrentUser } from '../services/api'
+
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
     async function restoreSession() {
@@ -31,8 +34,6 @@ export function AuthProvider({ children }) {
       try {
         await logoutCurrentUser()
         setCurrentUser(null)
-        setData(null)
-        setShowCreateListForm(false)
         setLoginError('')
       } catch (error) {
         console.error('Logout failed:', error)
@@ -48,6 +49,8 @@ export function AuthProvider({ children }) {
         isAuthenticated: !!currentUser,
         handleLoginSuccess,
         handleLogout,
+        loginError,
+        setLoginError,
       }}
     >
       {children}
