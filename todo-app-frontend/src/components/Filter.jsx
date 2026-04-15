@@ -99,7 +99,7 @@ export default function Filter({
             <button
               type="button"
               onClick={() => {
-                setSelectedColour("all");
+                setSelectedFilterColour("all");
                 setDueDateSort("none");
                 setStartDueDate("");
                 setEndDueDate("");
