@@ -20,6 +20,7 @@ public class Auth : IEndpointGroup
     {
         groupBuilder.MapGet(StartGoogleLogin, "google/start");
         groupBuilder.MapGet(GoogleCallback, "google/callback");
+        groupBuilder.MapPost(CompleteSignup, "signup");
         groupBuilder.MapGet(GetCurrentUser, "me").RequireAuthorization();
     }
 
@@ -64,6 +65,11 @@ public class Auth : IEndpointGroup
         public string Subject { get; init; } = string.Empty;
         public string Email { get; init; } = string.Empty;
         public string Name { get; init; } = string.Empty;
+    }
+
+    public sealed record CompleteGoogleSignupRequest
+    {
+        public string UserName { get; init; } = string.Empty;
     }
     public sealed record GoogleLoginResponse(string UserId, string Email, string UserName);
 
@@ -220,6 +226,87 @@ public class Auth : IEndpointGroup
             });
 
         return TypedResults.Redirect(frontendSignupUrl);
+    }
+
+    public static async Task<IResult> CompleteSignup(
+        HttpContext httpContext,
+        [FromBody] CompleteGoogleSignupRequest request,
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager)
+    {
+        var pendingSignupCookie = httpContext.Request.Cookies["pending_google_signup"];
+
+        if (string.IsNullOrWhiteSpace(pendingSignupCookie))
+        {
+            return TypedResults.BadRequest(new { error = "No pending Google signup found." });
+        }
+
+        PendingGoogleSignup? pendingSignup;
+        try
+        {
+            pendingSignup = JsonSerializer.Deserialize<PendingGoogleSignup>(pendingSignupCookie);
+        }
+        catch (JsonException)
+        {
+            return TypedResults.BadRequest(new { error = "Pending signup data is invalid." });
+        }
+
+        if (pendingSignup is null ||
+            string.IsNullOrWhiteSpace(pendingSignup.Subject) ||
+            string.IsNullOrWhiteSpace(pendingSignup.Email))
+        {
+            return TypedResults.BadRequest(new { error = "Pending signup data is incomplete." });
+        }
+
+        if (request is null || string.IsNullOrWhiteSpace(request.UserName))
+        {
+            return TypedResults.BadRequest(new { error = "Username is required." });
+        }
+
+        var trimmedUserName = request.UserName.Trim();
+
+        var existingGoogleUser = await userManager.Users
+            .FirstOrDefaultAsync(u => u.GoogleSubject == pendingSignup.Subject);
+
+        if (existingGoogleUser is not null)
+        {
+            return TypedResults.BadRequest(new { error = "This Google account is already linked." });
+        }
+
+        var existingUserName = await userManager.FindByNameAsync(trimmedUserName);
+        if (existingUserName is not null)
+        {
+            return TypedResults.BadRequest(new { error = "Username is already taken." });
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = trimmedUserName,
+            Email = pendingSignup.Email,
+            EmailConfirmed = true,
+            GoogleSubject = pendingSignup.Subject,
+            GoogleEmail = pendingSignup.Email
+        };
+
+        var createResult = await userManager.CreateAsync(user);
+
+        if (!createResult.Succeeded)
+        {
+            return TypedResults.BadRequest(new
+            {
+                error = "Failed to create user.",
+                details = createResult.Errors.Select(e => e.Description)
+            });
+        }
+
+        httpContext.Response.Cookies.Delete("pending_google_signup");
+
+        await signInManager.SignInAsync(user, isPersistent: false);
+
+        return TypedResults.Ok(new GoogleLoginResponse(
+            user.Id,
+            user.Email ?? string.Empty,
+            user.UserName ?? string.Empty));
     }
 
     public static async Task<Results<Ok<GoogleLoginResponse>, UnauthorizedHttpResult>> GetCurrentUser(
