@@ -1,49 +1,18 @@
-import React, { useRef, useEffect } from 'react'
-import { loginWithGoogleCredential } from '../services/api'
+import React from 'react'
 
-export default function Login({ onLoginSuccess, onLoginError }) {
-  const buttonRef = useRef(null)
-
-  const initializedRef = useRef(false)
-
-  useEffect(() => {
-    const initializeGoogle = async () => {
-      if (initializedRef.current || !window.google || !buttonRef.current) return
-
-      initializedRef.current = true
-
-      window.google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      callback: async (response) => {
-        try {
-          const data = await loginWithGoogleCredential(response.credential)
-          onLoginSuccess?.(data);
-        } catch (error) {
-            console.error(error)
-            onLoginError?.('Google login failed. Please try again.')
-          }
-        },
-      })
-
-      window.google.accounts.id.renderButton(buttonRef.current, {
-        theme: 'outline',
-        size: 'large',
-        text: 'signin_with',
-        shape: 'rectangular',
-      })
+export default function Login({ onLoginError }) {
+  const handleGoogleLogin = () => {
+    try {
+      window.location.href = 'http://localhost:5031/api/auth/google/start'
+    } catch (error) {
+      console.error(error)
+      onLoginError?.('Failed to start Google login.')
     }
+  }
 
-    initializeGoogle()
-    const intervalId = window.setInterval(() => {
-      initializeGoogle()
-
-      if (initializedRef.current) {
-        window.clearInterval(intervalId)
-      }
-    }, 250)
-
-    return () => window.clearInterval(intervalId)
-  }, [onLoginSuccess, onLoginError])
-
-  return <div ref={buttonRef} />
+  return (
+    <button type="button" onClick={handleGoogleLogin}>
+      Sign in with Google
+    </button>
+  )
 }
