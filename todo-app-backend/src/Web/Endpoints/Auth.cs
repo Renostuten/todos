@@ -1,4 +1,7 @@
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using todo_app_backend.Infrastructure.Identity;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
@@ -6,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace todo_app_backend.Web.Endpoints;
 
@@ -18,15 +22,46 @@ public class Auth : IEndpointGroup
         groupBuilder.MapGet(GetCurrentUser, "me").RequireAuthorization();
     }
 
-    public sealed record GoogleLoginRequest(string Credential);
+    public sealed record GoogleTokenResponse
+    {
+        public string AccessToken { get; init; } = string.Empty;
+
+        public int ExpiresIn { get; init; }
+
+        public string TokenType { get; init; } = string.Empty;
+
+        public string Scope { get; init; } = string.Empty;
+
+        public string IdToken { get; init; } = string.Empty;
+    }
+
+    public sealed record GoogleUserInfoResponse
+    {
+        public string Subject { get; init; } = string.Empty;
+
+        public string Email { get; init; } = string.Empty;
+
+        public bool EmailVerified { get; init; }
+
+        public string Name { get; init; } = string.Empty;
+
+        public string Picture { get; init; } = string.Empty;
+    }
+
+    public sealed record PendingGoogleSignup
+    {
+        public string Subject { get; init; } = string.Empty;
+        public string Email { get; init; } = string.Empty;
+        public string Name { get; init; } = string.Empty;
+    }
     public sealed record GoogleLoginResponse(string UserId, string Email, string UserName);
 
     public static RedirectHttpResult StartGoogleLogin(
         HttpContext httpContext,
         IConfiguration configuration)
     {
-        var clientId = configuration["Authentication:Google:ClientId"];
-        var redirectUri = configuration["Authentication:Google:RedirectUri"];
+        var clientId = configuration["Google:ClientId"];
+        var redirectUri = configuration["Google:RedirectUri"];
 
         if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUri))
         {
@@ -41,7 +76,7 @@ public class Auth : IEndpointGroup
             new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                // Secure = true,
                 SameSite = SameSiteMode.Lax,
                 Expires = DateTimeOffset.UtcNow.AddMinutes(10)
             }
@@ -69,66 +104,112 @@ public class Auth : IEndpointGroup
         return TypedResults.Redirect(authorizationUrl);
     }
 
-    // public static async Task<Results<Ok<GoogleLoginResponse>, BadRequest>> GoogleLogin(
-    //     UserManager<ApplicationUser> userManager,
-    //     SignInManager<ApplicationUser> signInManager,
-    //     IConfiguration configuration,
-    //     [FromBody] GoogleLoginRequest request)
-    // {
-    //     if (request is null || string.IsNullOrWhiteSpace(request.Credential))
-    //     {
-    //         return TypedResults.BadRequest();
-    //     }
+    public static async Task<IResult> GoogleCallback(
+        HttpContext httpContext,
+        IConfiguration configuration,
+        HttpClient httpClient,
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager)
+    {
+        var code = httpContext.Request.Query["code"].ToString();
+        var state = httpContext.Request.Query["state"].ToString();
+        var error = httpContext.Request.Query["error"].ToString();
 
-    //     var clientId = configuration["Authentication:Google:ClientId"];
-    //     var validationSettings = new GoogleJsonWebSignature.ValidationSettings();
+        if (!string.IsNullOrWhiteSpace(error))
+        {
+            return TypedResults.BadRequest(new { error });
+        }
 
-    //     if (!string.IsNullOrWhiteSpace(clientId))
-    //     {
-    //         validationSettings.Audience = [clientId];
-    //     }
+        var storedState = httpContext.Request.Cookies["google_oauth_state"];
 
-    //     GoogleJsonWebSignature.Payload payload;
-    //     try
-    //     {
-    //         payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential, validationSettings);
-    //     }
-    //     catch (Exception)
-    //     {
-    //         return TypedResults.BadRequest();
-    //     }
+        if (string.IsNullOrWhiteSpace(storedState) || string.IsNullOrWhiteSpace(state) || state != storedState)
+        {
+            return TypedResults.Unauthorized();
+        }
 
-    //     if (payload is null || string.IsNullOrWhiteSpace(payload.Email))
-    //     {
-    //         return TypedResults.BadRequest();
-    //     }
+        httpContext.Response.Cookies.Delete("google_oauth_state");
 
-    //     var email = payload.Email;
-    //     var user = await userManager.FindByEmailAsync(email);
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return TypedResults.BadRequest("Authorization code is missing.");
+        }
 
-    //     if (user is null)
-    //     {
-    //         user = new ApplicationUser
-    //         {
-    //             UserName = email,
-    //             Email = email,
-    //             EmailConfirmed = true,
-    //         };
+        var form = new Dictionary<string, string?>
+        {
+            ["code"] = code,
+            ["client_id"] = configuration["Google:ClientId"],
+            ["client_secret"] = configuration["Google:ClientSecret"],
+            ["redirect_uri"] = configuration["Google:RedirectUri"],
+            ["grant_type"] = "authorization_code"
+        };
 
-    //         var createResult = await userManager.CreateAsync(user);
-    //         if (!createResult.Succeeded)
-    //         {
-    //             return TypedResults.BadRequest();
-    //         }
-    //     }
+        var content = new FormUrlEncodedContent(form);
+        var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
 
-    //     await signInManager.SignInAsync(user, isPersistent: false);
+        if (!response.IsSuccessStatusCode)
+        {
+            var errorContent = await response.Content.ReadAsStringAsync();
+            return TypedResults.BadRequest(new { error = "Failed to exchange code for token.", details = errorContent });
+        }
 
-    //     return TypedResults.Ok(new GoogleLoginResponse(
-    //         user.Id,
-    //         user.Email ?? string.Empty,
-    //         user.UserName ?? string.Empty));
-    // }
+        var responseContent = await response.Content.ReadFromJsonAsync<GoogleTokenResponse>();
+
+        if (responseContent is null || string.IsNullOrWhiteSpace(responseContent.AccessToken))
+        {
+            return TypedResults.BadRequest("Google token response was invalid.");
+        }
+
+        var userInfoRequest = new HttpRequestMessage(
+            HttpMethod.Get,
+            "https://openidconnect.googleapis.com/v1/userinfo"
+        );
+        userInfoRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", responseContent.AccessToken);
+
+        var userInfoResponse = await httpClient.SendAsync(userInfoRequest);
+        if (!userInfoResponse.IsSuccessStatusCode)
+        {
+            var errorContent = await userInfoResponse.Content.ReadAsStringAsync();
+            return TypedResults.BadRequest(new { error = "Failed to fetch user information.", details = errorContent });
+        }
+
+        var userInfo = await userInfoResponse.Content.ReadFromJsonAsync<GoogleUserInfoResponse>();
+        if (userInfo is null || string.IsNullOrWhiteSpace(userInfo.Email) || string.IsNullOrWhiteSpace(userInfo.Subject))
+        {
+            return TypedResults.BadRequest("Failed to parse user information.");
+        }
+
+        var frontendOrigin = configuration["FrontendOrigin"] ?? "http://localhost:5173";
+        var frontendSignupUrl = configuration["FrontendSignupUrl"] ?? "http://localhost:5173/signup";
+
+        var user = await userManager.Users.FirstOrDefaultAsync(u => u.GoogleSubject == userInfo.Subject);
+        if (user is not null)
+        {            
+            await signInManager.SignInAsync(user, isPersistent: false);
+            return TypedResults.Redirect(frontendOrigin);
+        }
+
+        var pendingSignup = new PendingGoogleSignup
+        {
+            Subject = userInfo.Subject,
+            Email = userInfo.Email,
+            Name = userInfo.Name
+        };
+
+        var pendingSignupJson = JsonSerializer.Serialize(pendingSignup);
+
+        httpContext.Response.Cookies.Append(
+            "pending_google_signup",
+            pendingSignupJson,
+            new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(10)
+            });
+
+        return TypedResults.Redirect(frontendSignupUrl);
+    }
 
     public static async Task<Results<Ok<GoogleLoginResponse>, UnauthorizedHttpResult>> GetCurrentUser(
         UserManager<ApplicationUser> userManager,
