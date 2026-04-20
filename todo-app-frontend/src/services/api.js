@@ -144,20 +144,25 @@ export async function toggleTodoItem(updatedItem) {
   }
 }
 
-export async function loginWithGoogleCredential(credential) {
-  const response = await fetchWithCredentials(`${API_BASE_URL}/auth/google`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ credential }),
-  });
+export async function signupUser(userName) {
+  const response = await fetch(
+    `${API_BASE_URL}/auth/signup`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userName }),
+    }
+  )
 
   if (!response.ok) {
-    throw new Error('Google login failed');
+    const errorData = await response.json().catch(() => null)
+    throw new Error(errorData?.error ?? 'Signup failed.')
   }
 
-  return response.json();
+  return response.json()
 }
 
 export async function logoutCurrentUser() {

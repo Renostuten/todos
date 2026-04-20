@@ -11,7 +11,12 @@ export default function Login({ onLoginError }) {
   }
 
   return (
-    <button type="button" onClick={handleGoogleLogin}>
+    <button type="button" onClick={handleGoogleLogin} className="google-button">
+      <img
+        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+        alt="Google"
+        className="google-icon"
+      />
       Sign in with Google
     </button>
   )

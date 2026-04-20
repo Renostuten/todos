@@ -216,6 +216,25 @@ body {
   color: #374151;
 }
 
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 .logout-btn {
   border: 1px solid #cbd5e1;
   border-radius: 8px;
