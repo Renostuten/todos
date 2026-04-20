@@ -28,11 +28,11 @@ export default function Signup() {
   }
 
   return (
-    <div>
+    <div className='signup-page'>
       <h1>Complete your signup</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="userName">Username</label>
+      <form onSubmit={handleSubmit} className='google-signup-form'>
+        <div className='signup-input-group'>
+          <label htmlFor="userName">Username:</label>
           <input
             id="userName"
             type="text"
@@ -43,7 +43,7 @@ export default function Signup() {
 
         {error && <p>{error}</p>}
 
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit" disabled={isSubmitting} className='google-signup-btn'>
           {isSubmitting ? 'Creating account...' : 'Create account'}
         </button>
       </form>
