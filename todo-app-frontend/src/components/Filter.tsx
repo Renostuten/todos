@@ -1,4 +1,21 @@
-import { useState } from "react";
+import { type ChangeEvent, type Dispatch, type SetStateAction, useState } from "react";
+
+import type { DueDateSort, ItemSort, PrioritySort } from "../types/ui";
+
+interface FilterProps {
+  selectedFilterColour: string;
+  setSelectedFilterColour: Dispatch<SetStateAction<string>>;
+  startDueDate: string;
+  setStartDueDate: Dispatch<SetStateAction<string>>;
+  endDueDate: string;
+  setEndDueDate: Dispatch<SetStateAction<string>>;
+  dueDateSort: DueDateSort;
+  setDueDateSort: Dispatch<SetStateAction<DueDateSort>>;
+  prioritySort: PrioritySort;
+  setPrioritySort: Dispatch<SetStateAction<PrioritySort>>;
+  itemSort: ItemSort;
+  setItemSort: Dispatch<SetStateAction<ItemSort>>;
+}
 
 export default function Filter({
   selectedFilterColour,
@@ -13,12 +30,12 @@ export default function Filter({
   setPrioritySort,
   itemSort,
   setItemSort,
-}) {
+}: FilterProps) {
   const [showFilter, setShowFilter] = useState(false);
 
   return (
     <div className="filter-wrapper">
-      <button onClick={() => setShowFilter(!showFilter)}>
+      <button type="button" onClick={() => setShowFilter((prev) => !prev)}>
         {showFilter ? "Hide" : "Show"} Filter
       </button>
 
@@ -29,7 +46,9 @@ export default function Filter({
               Colour:
               <select
                 value={selectedFilterColour}
-                onChange={(e) => setSelectedFilterColour(e.target.value)}
+                onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+                  setSelectedFilterColour(event.target.value)
+                }
               >
                 <option value="all">All</option>
                 <option value="#78909C">Grey</option>
@@ -46,7 +65,9 @@ export default function Filter({
               Due date sort:
               <select
                 value={dueDateSort}
-                onChange={(e) => setDueDateSort(e.target.value)}
+                onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+                  setDueDateSort(event.target.value as DueDateSort)
+                }
               >
                 <option value="none">None</option>
                 <option value="earliest">Earliest first</option>
@@ -59,7 +80,9 @@ export default function Filter({
               <input
                 type="date"
                 value={startDueDate}
-                onChange={(e) => setStartDueDate(e.target.value)}
+                onChange={(event: ChangeEvent<HTMLInputElement>) =>
+                  setStartDueDate(event.target.value)
+                }
               />
             </label>
 
@@ -68,7 +91,7 @@ export default function Filter({
               <input
                 type="date"
                 value={endDueDate}
-                onChange={(e) => setEndDueDate(e.target.value)}
+                onChange={(event: ChangeEvent<HTMLInputElement>) => setEndDueDate(event.target.value)}
               />
             </label>
 
@@ -76,7 +99,9 @@ export default function Filter({
               Priority:
               <select
                 value={prioritySort}
-                onChange={(e) => setPrioritySort(e.target.value)}
+                onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+                  setPrioritySort(event.target.value as PrioritySort)
+                }
               >
                 <option value="none">None</option>
                 <option value="high-to-low">Highest priority first</option>
@@ -88,7 +113,9 @@ export default function Filter({
               Items:
               <select
                 value={itemSort}
-                onChange={(e) => setItemSort(e.target.value)}
+                onChange={(event: ChangeEvent<HTMLSelectElement>) =>
+                  setItemSort(event.target.value as ItemSort)
+                }
               >
                 <option value="none">None</option>
                 <option value="most-items">Most items</option>

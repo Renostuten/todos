@@ -1,21 +1,24 @@
 import { useMemo, useState } from "react";
 
-function getHighestPriority(list) {
-  if (!list.items || list.items.length === 0) {
+import type { TodoList } from "../types/todo";
+import type { DueDateSort, ItemSort, PrioritySort, TodoFiltersResult } from "../types/ui";
+
+function getHighestPriority(list: TodoList) {
+  if (list.items.length === 0) {
     return 0;
   }
 
   return Math.max(...list.items.map((item) => item.priority ?? 0));
 }
 
-export default function useTodoFilters(lists) {
+export default function useTodoFilters(lists: TodoList[]): TodoFiltersResult {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilterColour, setSelectedFilterColour] = useState("all");
   const [startDueDate, setStartDueDate] = useState("");
   const [endDueDate, setEndDueDate] = useState("");
-  const [dueDateSort, setDueDateSort] = useState("none");
-  const [prioritySort, setPrioritySort] = useState("none");
-  const [itemSort, setItemSort] = useState("none");
+  const [dueDateSort, setDueDateSort] = useState<DueDateSort>("none");
+  const [prioritySort, setPrioritySort] = useState<PrioritySort>("none");
+  const [itemSort, setItemSort] = useState<ItemSort>("none");
 
   const filteredLists = useMemo(() => {
     return [...lists]
@@ -27,10 +30,7 @@ export default function useTodoFilters(lists) {
           return false;
         }
 
-        if (
-          selectedFilterColour !== "all" &&
-          list.colour !== selectedFilterColour
-        ) {
+        if (selectedFilterColour !== "all" && list.colour !== selectedFilterColour) {
           return false;
         }
 
@@ -41,10 +41,7 @@ export default function useTodoFilters(lists) {
           return false;
         }
 
-        if (
-          endDueDate &&
-          (!list.dueDate || new Date(list.dueDate) > new Date(endDueDate))
-        ) {
+        if (endDueDate && (!list.dueDate || new Date(list.dueDate) > new Date(endDueDate))) {
           return false;
         }
 
@@ -52,15 +49,23 @@ export default function useTodoFilters(lists) {
       })
       .sort((a, b) => {
         if (dueDateSort === "earliest") {
-          const aDate = a.dueDate ? new Date(a.dueDate) : new Date("9999-12-31");
-          const bDate = b.dueDate ? new Date(b.dueDate) : new Date("9999-12-31");
-          return aDate - bDate;
+          const aDate = a.dueDate
+            ? new Date(a.dueDate)
+            : new Date("9999-12-31");
+          const bDate = b.dueDate
+            ? new Date(b.dueDate)
+            : new Date("9999-12-31");
+          return aDate.getTime() - bDate.getTime();
         }
 
         if (dueDateSort === "latest") {
-          const aDate = a.dueDate ? new Date(a.dueDate) : new Date("0001-01-01");
-          const bDate = b.dueDate ? new Date(b.dueDate) : new Date("0001-01-01");
-          return bDate - aDate;
+          const aDate = a.dueDate
+            ? new Date(a.dueDate)
+            : new Date("0001-01-01");
+          const bDate = b.dueDate
+            ? new Date(b.dueDate)
+            : new Date("0001-01-01");
+          return bDate.getTime() - aDate.getTime();
         }
 
         if (prioritySort === "high-to-low") {
