@@ -2,7 +2,6 @@ import { useEffect } from "react"
 import { signInWithGoogle } from "../services/api"
 
 export default function OAuthCallback() {
-  console.log("OAuth callback page loaded")
   useEffect(() => {
     const processLogin = async () => {
       try {
@@ -14,30 +13,28 @@ export default function OAuthCallback() {
         const storedState = sessionStorage.getItem("google_oauth_state")
 
         if (!accessToken || !returnedState || returnedState !== storedState) {
-          console.log("1")
           window.location.href = "/"
           return
         }
 
         sessionStorage.removeItem("google_oauth_state")
 
-        console.log("Access Token:", accessToken)
-
         const response = await signInWithGoogle(accessToken)
 
-        console.log("API Response:", response)
-
         if (!response.success) {
-          console.log("2")
           window.location.href = "/"
           return
         }
 
         window.history.replaceState({}, document.title, "/")
 
+        if (response.needsRegistration) {
+          window.location.href = "/signup"
+          return
+        }
+
         window.location.href = "/"
       } catch (err) {
-        console.log("3")
         console.error(err)
         window.location.href = "/"
       }

@@ -94,7 +94,11 @@ public class Auth : IEndpointGroup
         if (user is not null)
         {            
             await signInManager.SignInAsync(user, isPersistent: false);
-            return TypedResults.Redirect(frontendOrigin);
+            return TypedResults.Ok(new
+            {
+                success = true,
+                needsSignup = false,
+            });
         }
 
         var pendingSignup = new PendingGoogleSignup
@@ -117,7 +121,11 @@ public class Auth : IEndpointGroup
                 Expires = DateTimeOffset.UtcNow.AddMinutes(10)
             });
 
-        return TypedResults.Redirect(frontendSignupUrl);
+        return TypedResults.Ok(new
+        {
+            success = true,
+            needsSignup = true,
+        });
     }
 
     public static async Task<IResult> CompleteSignup(
