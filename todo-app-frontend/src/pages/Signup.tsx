@@ -1,6 +1,6 @@
 import { type ChangeEvent, type FormEvent, useState } from "react";
 
-import { signupUser } from "../services/api";
+import { signupUser } from "../services/authApi";
 
 export default function Signup() {
   const [userName, setUserName] = useState("");

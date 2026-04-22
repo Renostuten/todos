@@ -6,7 +6,7 @@ import {
   toggleTodoItem,
   updateTodoItem,
   updateTodoItemDetails,
-} from "../services/api";
+} from "../services/todoItemsApi";
 import type { TodoItem } from "../types/todo";
 
 interface TodoItemRowProps {

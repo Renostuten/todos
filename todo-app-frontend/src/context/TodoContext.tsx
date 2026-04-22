@@ -10,7 +10,7 @@ import {
 } from "react";
 
 import { useAuth } from "./AuthContext";
-import { getTodoLists } from "../services/api";
+import { getTodoLists } from "../services/todoListsApi";
 import type { TodoData } from "../types/todo";
 
 interface TodoContextValue {

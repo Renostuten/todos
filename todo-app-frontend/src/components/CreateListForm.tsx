@@ -7,7 +7,7 @@ import {
 } from "react";
 
 import { useTodos } from "../context/TodoContext";
-import { createTodoLists } from "../services/api";
+import { createTodoLists } from "../services/todoListsApi";
 import type { TodoColour } from "../types/todo";
 
 interface CreateListFormProps {

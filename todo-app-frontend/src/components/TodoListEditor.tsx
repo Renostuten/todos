@@ -7,7 +7,8 @@ import {
 } from "react";
 
 import { useTodos } from "../context/TodoContext";
-import { createTodoItem, updateTodoLists } from "../services/api";
+import { createTodoItem } from "../services/todoItemsApi";
+import { updateTodoLists } from "../services/todoListsApi";
 import type { TodoList } from "../types/todo";
 import type { ActiveFormState } from "../types/ui";
 

@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 
-import { getCurrentUser, logoutCurrentUser } from "../services/api";
+import { getCurrentUser, logoutCurrentUser } from "../services/authApi";
 import type { CurrentUser } from "../types/auth";
 
 interface AuthContextValue {

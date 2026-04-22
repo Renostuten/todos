@@ -1,7 +1,7 @@
 import { type MouseEvent, useState } from "react";
 
 import { useTodos } from "../context/TodoContext";
-import { deleteTodoLists } from "../services/api";
+import { deleteTodoLists } from "../services/todoListsApi";
 import type { ActiveFormState } from "../types/ui";
 import type { TodoList } from "../types/todo";
 import TodoItemRow from "./TodoItemRow";
