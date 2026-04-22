@@ -21,6 +21,8 @@ export default function OAuthCallback() {
 
         const response = await signInWithGoogle(accessToken)
 
+        console.log("Login response:", response)
+
         if (!response.success) {
           window.location.href = "/"
           return
@@ -28,7 +30,7 @@ export default function OAuthCallback() {
 
         window.history.replaceState({}, document.title, "/")
 
-        if (response.needsRegistration) {
+        if (response.needsSignup) {
           window.location.href = "/signup"
           return
         }
