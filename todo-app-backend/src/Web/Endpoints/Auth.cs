@@ -18,28 +18,9 @@ public class Auth : IEndpointGroup
 {
     public static void Map(RouteGroupBuilder groupBuilder)
     {
-        groupBuilder.MapGet(StartGoogleLogin, "google/start");
-        groupBuilder.MapGet(GoogleCallback, "google/callback");
+        groupBuilder.MapPost(SignIn, "google/implicit-login");
         groupBuilder.MapPost(CompleteSignup, "signup");
         groupBuilder.MapGet(GetCurrentUser, "me").RequireAuthorization();
-    }
-
-    public sealed record GoogleTokenResponse
-    {
-        [JsonPropertyName("access_token")]
-        public string AccessToken { get; init; } = string.Empty;
-
-        [JsonPropertyName("expires_in")]
-        public int ExpiresIn { get; init; }
-
-        [JsonPropertyName("token_type")]
-        public string TokenType { get; init; } = string.Empty;
-
-        [JsonPropertyName("scope")]
-        public string Scope { get; init; } = string.Empty;
-
-        [JsonPropertyName("id_token")]
-        public string IdToken { get; init; } = string.Empty;
     }
 
     public sealed record GoogleUserInfoResponse
@@ -71,116 +52,27 @@ public class Auth : IEndpointGroup
     {
         public string UserName { get; init; } = string.Empty;
     }
+
+    public sealed record GoogleLoginRequest
+    {
+        public string AccessToken { get; init; } = string.Empty;
+    }
     public sealed record GoogleLoginResponse(string UserId, string Email, string UserName);
 
-    public static RedirectHttpResult StartGoogleLogin(
-        HttpContext httpContext,
-        IConfiguration configuration)
-    {
-        var clientId = configuration["Google:ClientId"];
-        var redirectUri = configuration["Google:RedirectUri"];
-
-        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUri))
-        {
-            throw new InvalidOperationException("Google OAuth configuration is missing.");
-        }
-
-        var state = GenerateState();
-
-        httpContext.Response.Cookies.Append(
-            "google_oauth_state",
-            state,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                // Secure = true,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTimeOffset.UtcNow.AddMinutes(10)
-            }
-        );
-
-        var scopes = new[]
-        {
-            "openid",
-            "email"
-        };
-
-        var queryParams = new Dictionary<string, string?>
-        {
-            ["client_id"] = clientId,
-            ["redirect_uri"] = redirectUri,
-            ["response_type"] = "code",
-            ["scope"] = string.Join(" ", scopes),
-            ["state"] = state
-        };
-
-        var authorizationUrl = QueryHelpers.AddQueryString(
-            "https://accounts.google.com/o/oauth2/v2/auth",
-            queryParams!);
-
-        return TypedResults.Redirect(authorizationUrl);
-    }
-
-    public static async Task<IResult> GoogleCallback(
+    public static async Task<IResult> SignIn(
         HttpContext httpContext,
         IConfiguration configuration,
         HttpClient httpClient,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        [FromBody] GoogleLoginRequest request
+    )
     {
-        var code = httpContext.Request.Query["code"].ToString();
-        var state = httpContext.Request.Query["state"].ToString();
-        var error = httpContext.Request.Query["error"].ToString();
-
-        if (!string.IsNullOrWhiteSpace(error))
-        {
-            return TypedResults.BadRequest(new { error });
-        }
-
-        var storedState = httpContext.Request.Cookies["google_oauth_state"];
-
-        if (string.IsNullOrWhiteSpace(storedState) || string.IsNullOrWhiteSpace(state) || state != storedState)
-        {
-            return TypedResults.Unauthorized();
-        }
-
-        httpContext.Response.Cookies.Delete("google_oauth_state");
-
-        if (string.IsNullOrWhiteSpace(code))
-        {
-            return TypedResults.BadRequest("Authorization code is missing.");
-        }
-
-        var form = new Dictionary<string, string?>
-        {
-            ["code"] = code,
-            ["client_id"] = configuration["Google:ClientId"],
-            ["client_secret"] = configuration["Google:ClientSecret"],
-            ["redirect_uri"] = configuration["Google:RedirectUri"],
-            ["grant_type"] = "authorization_code"
-        };
-
-        var content = new FormUrlEncodedContent(form);
-        var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            return TypedResults.BadRequest(new { error = "Failed to exchange code for token.", details = errorContent });
-        }
-
-        var responseContent = await response.Content.ReadFromJsonAsync<GoogleTokenResponse>();
-
-        if (responseContent is null || string.IsNullOrWhiteSpace(responseContent.AccessToken))
-        {
-            return TypedResults.BadRequest("Google token response was invalid.");
-        }
-
         var userInfoRequest = new HttpRequestMessage(
             HttpMethod.Get,
             "https://openidconnect.googleapis.com/v1/userinfo"
         );
-        userInfoRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", responseContent.AccessToken);
+        userInfoRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", request.AccessToken);
 
         var userInfoResponse = await httpClient.SendAsync(userInfoRequest);
         if (!userInfoResponse.IsSuccessStatusCode)
@@ -328,14 +220,5 @@ public class Auth : IEndpointGroup
             currentUser.Id,
             currentUser.Email ?? string.Empty,
             currentUser.UserName ?? string.Empty));
-    }
-
-    private static string GenerateState()
-    {
-        var bytes = RandomNumberGenerator.GetBytes(32);
-        return Convert.ToBase64String(bytes)
-            .Replace("+", "-")
-            .Replace("/", "_")
-            .Replace("=", "");
     }
 }
