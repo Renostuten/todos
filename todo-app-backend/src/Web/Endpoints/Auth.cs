@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Security.Cryptography;
 using System.Text.Json;
+using todo_app_backend.Application.Auth.Common.Models;
 
 namespace todo_app_backend.Web.Endpoints;
 
@@ -23,55 +24,6 @@ public class Auth : IEndpointGroup
         groupBuilder.MapPost(CompleteSignup, "signup");
         groupBuilder.MapGet(GetCurrentUser, "me").RequireAuthorization();
     }
-
-    public sealed record GoogleTokenResponse
-    {
-        [JsonPropertyName("access_token")]
-        public string AccessToken { get; init; } = string.Empty;
-
-        [JsonPropertyName("expires_in")]
-        public int ExpiresIn { get; init; }
-
-        [JsonPropertyName("token_type")]
-        public string TokenType { get; init; } = string.Empty;
-
-        [JsonPropertyName("scope")]
-        public string Scope { get; init; } = string.Empty;
-
-        [JsonPropertyName("id_token")]
-        public string IdToken { get; init; } = string.Empty;
-    }
-
-    public sealed record GoogleUserInfoResponse
-    {
-        [JsonPropertyName("sub")]
-        public string Subject { get; init; } = string.Empty;
-
-        [JsonPropertyName("email")]
-        public string Email { get; init; } = string.Empty;
-
-        [JsonPropertyName("email_verified")]
-        public bool EmailVerified { get; init; }
-
-        [JsonPropertyName("name")]
-        public string Name { get; init; } = string.Empty;
-
-        [JsonPropertyName("picture")]
-        public string Picture { get; init; } = string.Empty;
-    }
-
-    public sealed record PendingGoogleSignup
-    {
-        public string Subject { get; init; } = string.Empty;
-        public string Email { get; init; } = string.Empty;
-        public string Name { get; init; } = string.Empty;
-    }
-
-    public sealed record CompleteGoogleSignupRequest
-    {
-        public string UserName { get; init; } = string.Empty;
-    }
-    public sealed record GoogleLoginResponse(string UserId, string Email, string UserName);
 
     public static RedirectHttpResult StartGoogleLogin(
         HttpContext httpContext,
