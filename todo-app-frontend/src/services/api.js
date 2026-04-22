@@ -144,6 +144,24 @@ export async function toggleTodoItem(updatedItem) {
   }
 }
 
+export async function signInWithGoogle(accessToken) {
+  const response = await fetchWithCredentials(`${API_BASE_URL}/auth/google/implicit-login`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify({ accessToken }),
+  });
+
+  if (!response.ok) {
+    throw new Error('Google login failed');
+  }
+
+  return response.json();
+}
+
+
 export async function signupUser(userName) {
   const response = await fetch(
     `${API_BASE_URL}/auth/signup`,
