@@ -6,9 +6,9 @@ import {
   useState,
 } from "react";
 
-import { useTodos } from "../context/TodoContext";
-import { createTodoLists } from "../services/todoListsApi";
-import type { TodoColour } from "../types/todo";
+import { useTodos } from "../../context/TodoContext";
+import { createTodoLists } from "../../services/todoListsApi";
+import type { TodoColour } from "../../types/todo";
 
 interface CreateListFormProps {
   colours: TodoColour[];

@@ -6,11 +6,11 @@ import {
   useState,
 } from "react";
 
-import { useTodos } from "../context/TodoContext";
-import { createTodoItem } from "../services/todoItemsApi";
-import { updateTodoLists } from "../services/todoListsApi";
-import type { TodoList } from "../types/todo";
-import type { ActiveFormState } from "../types/ui";
+import { useTodos } from "../../context/TodoContext";
+import { createTodoItem } from "../../services/todoItemsApi";
+import { updateTodoLists } from "../../services/todoListsApi";
+import type { TodoList } from "../../types/todo";
+import type { ActiveFormState } from "../../types/ui";
 
 interface TodoListEditorProps {
   list: TodoList;
