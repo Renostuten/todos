@@ -1,13 +1,13 @@
 import { type ChangeEvent, type FormEvent, type MouseEvent, useMemo, useState } from "react";
 
-import { useTodos } from "../context/TodoContext";
+import { useTodos } from "../../context/TodoContext";
 import {
   deleteTodoItem,
   toggleTodoItem,
   updateTodoItem,
   updateTodoItemDetails,
-} from "../services/todoItemsApi";
-import type { TodoItem } from "../types/todo";
+} from "../../services/todoItemsApi";
+import type { TodoItem } from "../../types/todo";
 
 interface TodoItemRowProps {
   item: TodoItem;

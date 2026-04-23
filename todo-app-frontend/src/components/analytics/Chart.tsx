@@ -13,7 +13,7 @@ import {
   YAxis,
 } from "recharts";
 
-import type { TodoList } from "../types/todo";
+import type { TodoList } from "../../types/todo";
 
 interface ChartProps {
   lists: TodoList[];

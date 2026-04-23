@@ -2,11 +2,11 @@ import { type ChangeEvent, useState } from "react";
 
 import "../App.css";
 
-import Chart from "../components/Chart";
-import CreateListForm from "../components/CreateListForm";
-import Filter from "../components/Filter";
-import Login from "../components/Login";
-import TodoListCard from "../components/TodoListCard";
+import Chart from "../components/analytics/Chart";
+import CreateListForm from "../components/todolist/CreateListForm";
+import Filter from "../components/todolist/Filter";
+import Login from "../components/auth/Login";
+import TodoListCard from "../components/todolist/TodoListCard";
 import { useAuth } from "../context/AuthContext";
 import { useTodos } from "../context/TodoContext";
 import useTodoFilters from "../hooks/useTodoFilters";

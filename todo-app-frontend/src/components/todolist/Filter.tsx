@@ -1,6 +1,6 @@
 import { type ChangeEvent, type Dispatch, type SetStateAction, useState } from "react";
 
-import type { DueDateSort, ItemSort, PrioritySort } from "../types/ui";
+import type { DueDateSort, ItemSort, PrioritySort } from "../../types/ui";
 
 interface FilterProps {
   selectedFilterColour: string;
