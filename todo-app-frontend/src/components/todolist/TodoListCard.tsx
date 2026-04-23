@@ -5,7 +5,7 @@ import { deleteTodoLists } from "../../services/todoListsApi";
 import type { ActiveFormState } from "../../types/ui";
 import type { TodoList } from "../../types/todo";
 import TodoItemRow from "../todoitem/TodoItemRow";
-import TodoListEditor from "../TodoListEditor";
+import TodoListEditor from "./TodoListEditor";
 
 interface TodoListCardProps {
   list: TodoList;
