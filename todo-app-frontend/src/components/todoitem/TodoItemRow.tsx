@@ -251,7 +251,7 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
               }}
               style={{ cursor: "pointer" }}
             >
-              {item.done ? "[done]" : "[ ]"} {item.title}
+              {item.done ? "☑" : "☐"} {item.title}
             </strong>
             <div className="todo-item-metadata">
               <div>Priority: {priorityMap[item.priority ?? 0] ?? "Unknown"}</div>
