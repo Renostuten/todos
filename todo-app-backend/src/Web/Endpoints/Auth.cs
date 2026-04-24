@@ -45,7 +45,7 @@ public class Auth : IEndpointGroup
             new CookieOptions
             {
                 HttpOnly = true,
-                // Secure = true,
+                Secure = true,
                 SameSite = SameSiteMode.Lax,
                 Expires = DateTimeOffset.UtcNow.AddMinutes(10)
             }
