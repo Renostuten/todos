@@ -1,4 +1,5 @@
-import { type ChangeEvent, type FormEvent, type MouseEvent, useMemo, useState } from "react";
+import { type ChangeEvent, type MouseEvent, useMemo, useState } from "react";
+import type * as React from "react";
 
 import { useTodos } from "../../context/TodoContext";
 import {
@@ -73,7 +74,7 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
    * @param event - The form submission event from the main item editor.
    * @returns A promise that resolves after the item update workflow completes.
    */
-  async function handleUpdateItem(event: FormEvent<HTMLFormElement>) {
+  async function handleUpdateItem(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!editItemForm.title.trim()) {
@@ -150,7 +151,7 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
    * @param event - The form submission event from the item details editor.
    * @returns A promise that resolves after the detail update workflow completes.
    */
-  async function handleUpdateItemDetails(event: FormEvent<HTMLFormElement>) {
+  async function handleUpdateItemDetails(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     try {

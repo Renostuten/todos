@@ -1,4 +1,5 @@
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, useState } from "react";
+import type * as React from "react";
 
 import { signupUser } from "../services/authApi";
 
@@ -16,7 +17,7 @@ export default function Signup() {
    * @param event - The form submission event from the signup page.
    * @returns A promise that resolves after the signup flow completes or fails.
    */
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 

@@ -1,10 +1,10 @@
 import {
   type ChangeEvent,
   type Dispatch,
-  type FormEvent,
   type SetStateAction,
   useState,
 } from "react";
+import type * as React from "react";
 
 import { useTodos } from "../../context/TodoContext";
 import { createTodoLists } from "../../services/todoListsApi";
@@ -38,7 +38,7 @@ export default function CreateListForm({
    * @param event - The form submission event for the create-list form.
    * @returns A promise that resolves after the create-and-refresh flow finishes.
    */
-  async function handleCreateList(event: FormEvent<HTMLFormElement>) {
+  async function handleCreateList(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!title.trim()) {

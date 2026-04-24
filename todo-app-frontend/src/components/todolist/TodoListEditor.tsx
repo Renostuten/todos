@@ -1,10 +1,10 @@
 import {
   type ChangeEvent,
   type Dispatch,
-  type FormEvent,
   type SetStateAction,
   useState,
 } from "react";
+import type * as React from "react";
 
 import { useTodos } from "../../context/TodoContext";
 import { createTodoItem } from "../../services/todoItemsApi";
@@ -92,7 +92,7 @@ export default function TodoListEditor({
    * @param event - The form submission event from the edit-list form.
    * @returns A promise that resolves after the list update workflow completes.
    */
-  async function handleUpdateList(event: FormEvent<HTMLFormElement>) {
+  async function handleUpdateList(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!editForm.title.trim()) {
@@ -138,7 +138,7 @@ export default function TodoListEditor({
    * @param event - The form submission event from the add-item form.
    * @returns A promise that resolves after the item creation workflow completes.
    */
-  async function handleCreateItem(event: FormEvent<HTMLFormElement>) {
+  async function handleCreateItem(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!addItemForm.title.trim()) {
