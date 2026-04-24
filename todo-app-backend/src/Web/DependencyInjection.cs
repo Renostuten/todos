@@ -3,6 +3,7 @@ using todo_app_backend.Application.Common.Interfaces;
 using todo_app_backend.Infrastructure.Data;
 using todo_app_backend.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using todo_app_backend.Web.Infrastructure.Authentication;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -31,6 +32,9 @@ public static class DependencyInjection
         });
 
         builder.Services.AddCors();
+
+        builder.Services.AddScoped<IOAuthStateService, OAuthStateService>();
+        builder.Services.AddScoped<IPendingGoogleSignupService, PendingGoogleSignupService>();
     }
 
     public static void AddKeyVaultIfConfigured(this IHostApplicationBuilder builder)

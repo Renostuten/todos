@@ -5,10 +5,9 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using System.Security.Cryptography;
-using System.Text.Json;
 using todo_app_backend.Application.Auth.Common.Models;
 using todo_app_backend.Application.Common.Interfaces;
+using todo_app_backend.Web.Infrastructure.Authentication;
 
 namespace todo_app_backend.Web.Endpoints;
 
@@ -24,21 +23,10 @@ public class Auth : IEndpointGroup
 
     public static RedirectHttpResult StartGoogleLogin(
         HttpContext httpContext,
-        IGoogleAuthService googleAuthService)
+        IGoogleAuthService googleAuthService,
+        IOAuthStateService oAuthStateService)
     {
-        var state = GenerateState();
-
-        httpContext.Response.Cookies.Append(
-            "google_oauth_state",
-            state,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTimeOffset.UtcNow.AddMinutes(10)
-            }
-        );
+        var state = oAuthStateService.CreateState(httpContext);
 
         var authorizationUrl = googleAuthService.BuildAuthorizationUrl(state);
 
@@ -48,6 +36,8 @@ public class Auth : IEndpointGroup
     public static async Task<IResult> GoogleCallback(
         HttpContext httpContext,
         IGoogleAuthService googleAuthService,
+        IOAuthStateService oAuthStateService,
+        IPendingGoogleSignupService pendingGoogleSignupService,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IConfiguration configuration,
@@ -62,14 +52,12 @@ public class Auth : IEndpointGroup
             return TypedResults.BadRequest(new { error });
         }
 
-        var storedState = httpContext.Request.Cookies["google_oauth_state"];
-
-        if (string.IsNullOrWhiteSpace(storedState) || string.IsNullOrWhiteSpace(state) || state != storedState)
+        if (!oAuthStateService.IsValidState(httpContext, state))
         {
             return TypedResults.Unauthorized();
         }
 
-        httpContext.Response.Cookies.Delete("google_oauth_state");
+        oAuthStateService.ClearState(httpContext);
 
         if (string.IsNullOrWhiteSpace(code))
         {
@@ -107,18 +95,7 @@ public class Auth : IEndpointGroup
             Name = userInfo.Name
         };
 
-        var pendingSignupJson = JsonSerializer.Serialize(pendingSignup);
-
-        httpContext.Response.Cookies.Append(
-            "pending_google_signup",
-            pendingSignupJson,
-            new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTimeOffset.UtcNow.AddMinutes(10)
-            });
+        pendingGoogleSignupService.Store(httpContext, pendingSignup);
 
         return TypedResults.Redirect(frontendSignupUrl);
     }
@@ -127,27 +104,17 @@ public class Auth : IEndpointGroup
         HttpContext httpContext,
         [FromBody] CompleteGoogleSignupRequest request,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        IPendingGoogleSignupService pendingGoogleSignupService)
     {
-        var pendingSignupCookie = httpContext.Request.Cookies["pending_google_signup"];
+        var pendingSignup = pendingGoogleSignupService.Get(httpContext);
 
-        if (string.IsNullOrWhiteSpace(pendingSignupCookie))
+        if (pendingSignup is null)
         {
             return TypedResults.BadRequest(new { error = "No pending Google signup found." });
         }
 
-        PendingGoogleSignup? pendingSignup;
-        try
-        {
-            pendingSignup = JsonSerializer.Deserialize<PendingGoogleSignup>(pendingSignupCookie);
-        }
-        catch (JsonException)
-        {
-            return TypedResults.BadRequest(new { error = "Pending signup data is invalid." });
-        }
-
-        if (pendingSignup is null ||
-            string.IsNullOrWhiteSpace(pendingSignup.Subject) ||
+        if (string.IsNullOrWhiteSpace(pendingSignup.Subject) ||
             string.IsNullOrWhiteSpace(pendingSignup.Email))
         {
             return TypedResults.BadRequest(new { error = "Pending signup data is incomplete." });
@@ -194,7 +161,7 @@ public class Auth : IEndpointGroup
             });
         }
 
-        httpContext.Response.Cookies.Delete("pending_google_signup");
+        pendingGoogleSignupService.Clear(httpContext);
 
         await signInManager.SignInAsync(user, isPersistent: false);
 
@@ -223,14 +190,5 @@ public class Auth : IEndpointGroup
             currentUser.Id,
             currentUser.Email ?? string.Empty,
             currentUser.UserName ?? string.Empty));
-    }
-
-    private static string GenerateState()
-    {
-        var bytes = RandomNumberGenerator.GetBytes(32);
-        return Convert.ToBase64String(bytes)
-            .Replace("+", "-")
-            .Replace("/", "_")
-            .Replace("=", "");
     }
 }
