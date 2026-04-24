@@ -7,6 +7,11 @@ import {
   parseJsonResponse,
 } from "./http";
 
+/**
+ * Fetches the currently authenticated user from the session-backed `/auth/me` endpoint.
+ *
+ * @returns The authenticated user tied to the current session.
+ */
 export async function getCurrentUser(): Promise<CurrentUser> {
   const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`);
 
@@ -17,6 +22,12 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   return parseJsonResponse<CurrentUser>(response);
 }
 
+/**
+ * Creates a frontend account record after OAuth by calling the `/auth/signup` endpoint.
+ *
+ * @param userName - The username chosen during the signup completion flow.
+ * @returns The created current-user payload returned by the API.
+ */
 export async function signupUser(userName: string): Promise<CurrentUser> {
   const response = await fetch(`${API_BASE_URL}/auth/signup`, {
     method: "POST",
@@ -34,6 +45,11 @@ export async function signupUser(userName: string): Promise<CurrentUser> {
   return parseJsonResponse<CurrentUser>(response);
 }
 
+/**
+ * Signs the current user out through the backend logout endpoint and clears the server session.
+ *
+ * @returns A promise that resolves when the logout request succeeds.
+ */
 export async function logoutCurrentUser(): Promise<void> {
   const response = await fetchWithCredentials(`${API_BASE_URL}/Users/logout`, {
     method: "POST",

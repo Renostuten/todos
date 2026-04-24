@@ -32,12 +32,24 @@ interface CompletionChartDatum {
   fill: string;
 }
 
+/**
+ * Keeps pie slices coloured with the source list colour instead of the chart theme.
+ *
+ * @param props - The Recharts sector props for the current pie slice.
+ * @returns A sector element using the list colour when available.
+ */
 function CustomSector(props: PieSectorShapeProps) {
   const payload = props.payload as ColourChartDatum | undefined;
 
   return <Sector {...props} fill={payload?.colour ?? props.fill} />;
 }
 
+/**
+ * Positions readable labels outside each pie slice for the colour breakdown chart.
+ *
+ * @param props - The Recharts label props for the current pie slice.
+ * @returns A positioned SVG text label, or `null` when the chart data is incomplete.
+ */
 function renderCustomLabel(props: PieLabelRenderProps) {
   const { cx, cy, midAngle, outerRadius } = props;
   const chartPayload = props.payload as ColourChartDatum | undefined;
@@ -68,9 +80,15 @@ function renderCustomLabel(props: PieLabelRenderProps) {
     >
       {chartPayload.name}
     </text>
-  );
+    );
 }
 
+/**
+ * Treats a list as finished only when it has items and every item is complete.
+ *
+ * @param list - The todo list being checked for completion.
+ * @returns `true` when every item is done and the list is not empty.
+ */
 function isListFinished(list: TodoList) {
   if (list.items.length === 0) {
     return false;
@@ -79,6 +97,12 @@ function isListFinished(list: TodoList) {
   return list.items.every((item) => item.done);
 }
 
+/**
+ * Visualizes list colour distribution and overall completion status for the dashboard.
+ *
+ * @param lists - The todo lists to summarize in the charts.
+ * @returns The analytics widgets shown on the dashboard.
+ */
 export default function Chart({ lists }: ChartProps) {
   const colourMap: Record<string, string> = {
     "#78909C": "Grey",

@@ -17,6 +17,23 @@ interface FilterProps {
   setItemSort: Dispatch<SetStateAction<ItemSort>>;
 }
 
+/**
+ * Shows and resets the dashboard controls for colour, due date, priority, and item-count filtering.
+ *
+ * @param selectedFilterColour - The currently selected list colour filter.
+ * @param setSelectedFilterColour - Updates the selected colour filter.
+ * @param startDueDate - The inclusive lower bound for due date filtering.
+ * @param setStartDueDate - Updates the start due date filter.
+ * @param endDueDate - The inclusive upper bound for due date filtering.
+ * @param setEndDueDate - Updates the end due date filter.
+ * @param dueDateSort - The current due date sort mode.
+ * @param setDueDateSort - Updates the due date sort mode.
+ * @param prioritySort - The current priority sort mode.
+ * @param setPrioritySort - Updates the priority sort mode.
+ * @param itemSort - The current item-count sort mode.
+ * @param setItemSort - Updates the item-count sort mode.
+ * @returns The filter toggle button and filter-panel UI.
+ */
 export default function Filter({
   selectedFilterColour,
   setSelectedFilterColour,
@@ -32,7 +49,6 @@ export default function Filter({
   setItemSort,
 }: FilterProps) {
   const [showFilter, setShowFilter] = useState(false);
-
   return (
     <div className="filter-wrapper">
       <button type="button" onClick={() => setShowFilter((prev) => !prev)}>

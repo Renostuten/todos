@@ -2,11 +2,20 @@ import { type ChangeEvent, type FormEvent, useState } from "react";
 
 import { signupUser } from "../services/authApi";
 
+/**
+ * Collects the username required to finish account creation after OAuth signup.
+ */
 export default function Signup() {
   const [userName, setUserName] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /**
+   * Submits the signup form to create the user's application profile, then returns to the dashboard.
+   *
+   * @param event - The form submission event from the signup page.
+   * @returns A promise that resolves after the signup flow completes or fails.
+   */
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");

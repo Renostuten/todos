@@ -30,10 +30,24 @@ interface AddItemFormState {
   title: string;
 }
 
+/**
+ * Converts backend date strings into the format expected by `datetime-local` inputs.
+ *
+ * @param dateString - The backend date string or `null` when no due date exists.
+ * @returns A `datetime-local` compatible value, or an empty string when unset.
+ */
 function toDateTimeLocalValue(dateString: string | null) {
   return dateString ? dateString.slice(0, 16) : "";
 }
 
+/**
+ * Handles inline editing of a list and inline creation of new items within that list card.
+ *
+ * @param list - The todo list currently being edited or appended to.
+ * @param activeForm - The shared state describing which inline form is open.
+ * @param setActiveForm - Updates which inline form is active for the card.
+ * @returns Inline controls for editing the list or adding a new item.
+ */
 export default function TodoListEditor({
   list,
   activeForm,
@@ -54,6 +68,11 @@ export default function TodoListEditor({
   const { data, loadTodos } = useTodos();
   const colours = data?.colours ?? [];
 
+  /**
+   * Opens the list edit form and seeds it with the current list values.
+   *
+   * @param currentList - The list whose fields should populate the edit form.
+   */
   function handleStartEdit(currentList: TodoList) {
     setActiveForm({
       type: "editList",
@@ -67,6 +86,12 @@ export default function TodoListEditor({
     });
   }
 
+  /**
+   * Saves the edited list details to the backend and refreshes the shared todo data.
+   *
+   * @param event - The form submission event from the edit-list form.
+   * @returns A promise that resolves after the list update workflow completes.
+   */
   async function handleUpdateList(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -91,6 +116,11 @@ export default function TodoListEditor({
     }
   }
 
+  /**
+   * Opens the add-item form for the selected list and resets the new item draft.
+   *
+   * @param currentList - The list that will receive the new todo item.
+   */
   function handleStartAddItem(currentList: TodoList) {
     setActiveForm({
       type: "addItem",
@@ -102,6 +132,12 @@ export default function TodoListEditor({
     });
   }
 
+  /**
+   * Creates a new item under the current list, then closes the inline form and reloads data.
+   *
+   * @param event - The form submission event from the add-item form.
+   * @returns A promise that resolves after the item creation workflow completes.
+   */
   async function handleCreateItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 

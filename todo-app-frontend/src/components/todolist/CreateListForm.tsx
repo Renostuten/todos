@@ -15,6 +15,13 @@ interface CreateListFormProps {
   setShowCreateListForm: Dispatch<SetStateAction<boolean>>;
 }
 
+/**
+ * Renders the form for creating a todo list with a title, colour, and optional due date.
+ *
+ * @param colours - The available list colours supplied by the shared todo metadata.
+ * @param setShowCreateListForm - Controls whether the parent shows this form.
+ * @returns The create-list form UI.
+ */
 export default function CreateListForm({
   colours,
   setShowCreateListForm,
@@ -25,6 +32,12 @@ export default function CreateListForm({
 
   const { loadTodos } = useTodos();
 
+  /**
+   * Creates a new list from the form inputs, then refreshes the shared todo data.
+   *
+   * @param event - The form submission event for the create-list form.
+   * @returns A promise that resolves after the create-and-refresh flow finishes.
+   */
   async function handleCreateList(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -50,7 +63,6 @@ export default function CreateListForm({
       console.error("Error creating todo list:", error);
     }
   }
-
   return (
     <div className="create-list-panel">
       <h2>Create New Todo List</h2>

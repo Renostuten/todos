@@ -3,6 +3,12 @@ import { useMemo, useState } from "react";
 import type { TodoList } from "../types/todo";
 import type { DueDateSort, ItemSort, PrioritySort, TodoFiltersResult } from "../types/ui";
 
+/**
+ * Finds the highest item priority in a list so lists can be sorted by urgency.
+ *
+ * @param list - The todo list whose items are being inspected.
+ * @returns The highest priority value found, or `0` when the list has no items.
+ */
 function getHighestPriority(list: TodoList) {
   if (list.items.length === 0) {
     return 0;
@@ -11,6 +17,12 @@ function getHighestPriority(list: TodoList) {
   return Math.max(...list.items.map((item) => item.priority ?? 0));
 }
 
+/**
+ * Encapsulates dashboard search, filter, and sorting state for todo lists.
+ *
+ * @param lists - The source todo lists to filter and sort for display.
+ * @returns Filter state setters plus the derived list collection for the dashboard.
+ */
 export default function useTodoFilters(lists: TodoList[]): TodoFiltersResult {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilterColour, setSelectedFilterColour] = useState("all");

@@ -11,6 +11,9 @@ import { useAuth } from "../context/AuthContext";
 import { useTodos } from "../context/TodoContext";
 import useTodoFilters from "../hooks/useTodoFilters";
 
+/**
+ * Displays the signed-in dashboard, including auth actions, list creation, filtering, and analytics.
+ */
 export default function Dashboard() {
   const [showCreateListForm, setShowCreateListForm] = useState(false);
 

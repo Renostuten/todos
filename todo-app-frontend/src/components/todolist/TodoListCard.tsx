@@ -11,6 +11,12 @@ interface TodoListCardProps {
   list: TodoList;
 }
 
+/**
+ * Displays a single todo list card with progress, due date, editing controls, and item rows.
+ *
+ * @param list - The todo list to render in the dashboard grid.
+ * @returns A card showing the list summary, actions, and items.
+ */
 export default function TodoListCard({ list }: TodoListCardProps) {
   const [activeForm, setActiveForm] = useState<ActiveFormState>({
     type: null,
@@ -25,6 +31,13 @@ export default function TodoListCard({ list }: TodoListCardProps) {
       ? 0
       : Math.round((list.items.filter((item) => item.done).length / list.items.length) * 100);
 
+  /**
+   * Confirms list deletion, clears any open inline editor for that list, and reloads the dashboard data.
+   *
+   * @param event - The click event from the delete-list button.
+   * @param id - The id of the list to delete.
+   * @returns A promise that resolves after the deletion workflow completes.
+   */
   async function handleDeleteList(event: MouseEvent<HTMLButtonElement>, id: number) {
     event.preventDefault();
 

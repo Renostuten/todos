@@ -27,6 +27,12 @@ interface EditItemDetailsFormState {
   note: string;
 }
 
+/**
+ * Displays a todo item row with completion toggling plus inline editing for core fields and details.
+ *
+ * @param item - The todo item to render and manage inline.
+ * @returns The todo item row UI with view and edit states.
+ */
 export default function TodoItemRow({ item }: TodoItemRowProps) {
   const [editItemId, setEditItemId] = useState<number | null>(null);
   const [editItemForm, setEditItemForm] = useState<EditItemFormState>({
@@ -46,6 +52,11 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
 
   const { data, loadTodos } = useTodos();
 
+  /**
+   * Opens the main item editor with the selected item's current title and completion state.
+   *
+   * @param currentItem - The item whose editable fields should populate the main edit form.
+   */
   function handleStartEditItem(currentItem: TodoItem) {
     setEditItemId(currentItem.id);
     setEditItemForm({
@@ -56,6 +67,12 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
     });
   }
 
+  /**
+   * Persists edits to an item's title/completion fields and refreshes the list data.
+   *
+   * @param event - The form submission event from the main item editor.
+   * @returns A promise that resolves after the item update workflow completes.
+   */
   async function handleUpdateItem(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -84,6 +101,13 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
     }
   }
 
+  /**
+   * Confirms item deletion, closes any active inline editor for that item, and reloads todos.
+   *
+   * @param event - The click event from the delete-item button.
+   * @param id - The id of the todo item to delete.
+   * @returns A promise that resolves after the deletion workflow completes.
+   */
   async function handleDeleteItem(event: MouseEvent<HTMLButtonElement>, id: number) {
     event.preventDefault();
 
@@ -105,6 +129,11 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
     }
   }
 
+  /**
+   * Opens the secondary editor for an item's priority and note fields.
+   *
+   * @param currentItem - The item whose detail fields should populate the details form.
+   */
   function handleStartEditItemDetails(currentItem: TodoItem) {
     setEditItemDetailsId(currentItem.id);
     setEditItemDetailsForm({
@@ -115,6 +144,12 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
     });
   }
 
+  /**
+   * Saves the item's note and priority details, then refreshes the shared todo payload.
+   *
+   * @param event - The form submission event from the item details editor.
+   * @returns A promise that resolves after the detail update workflow completes.
+   */
   async function handleUpdateItemDetails(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -138,6 +173,12 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
     }
   }
 
+  /**
+   * Flips an item's completion state through the toggle API and reloads the updated list.
+   *
+   * @param currentItem - The item whose completion state should be inverted.
+   * @returns A promise that resolves after the toggle request completes.
+   */
   async function handleToggleItem(currentItem: TodoItem) {
     try {
       await toggleTodoItem({
@@ -151,6 +192,11 @@ export default function TodoItemRow({ item }: TodoItemRowProps) {
     }
   }
 
+  /**
+   * Maps priority ids from the shared metadata payload to readable labels for display.
+   *
+   * @returns A lookup object from priority id to its display label.
+   */
   const priorityMap = useMemo<Record<number, string>>(() => {
     return (data?.priorityLevels ?? []).reduce<Record<number, string>>((accumulator, level) => {
       accumulator[level.id] = level.title;

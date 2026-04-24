@@ -27,6 +27,12 @@ interface TodoProviderProps {
   children: ReactNode;
 }
 
+/**
+ * Normalizes unknown fetch failures into a user-facing message for the todo context.
+ *
+ * @param error - The caught error from a todo loading request.
+ * @returns A readable message to show in the UI.
+ */
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
@@ -35,6 +41,12 @@ function getErrorMessage(error: unknown) {
   return "Failed to load todo lists";
 }
 
+/**
+ * Provides the loaded todo data plus refresh, loading, and error state for authenticated users.
+ *
+ * @param children - The application subtree that consumes todo data.
+ * @returns The todo context provider wrapped around the given children.
+ */
 export function TodoProvider({ children }: TodoProviderProps) {
   const { currentUser } = useAuth();
 
@@ -42,6 +54,11 @@ export function TodoProvider({ children }: TodoProviderProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Fetches the current user's todo payload and resets state when no session is available.
+   *
+   * @returns A promise that resolves after the context state has been refreshed.
+   */
   const loadTodos = useCallback(async () => {
     if (!currentUser) {
       setData(null);
@@ -81,6 +98,11 @@ export function TodoProvider({ children }: TodoProviderProps) {
   );
 }
 
+/**
+ * Returns the shared todo context and ensures consumers are wrapped in the provider.
+ *
+ * @returns The current todo context value for the active component tree.
+ */
 export function useTodos() {
   const context = useContext(TodoContext);
 
