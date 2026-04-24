@@ -103,9 +103,11 @@ public class Auth : IEndpointGroup
     public static async Task<IResult> CompleteSignup(
         HttpContext httpContext,
         [FromBody] CompleteGoogleSignupRequest request,
+        IPendingGoogleSignupService pendingGoogleSignupService,
+        IIdentityService identityService,
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        IPendingGoogleSignupService pendingGoogleSignupService)
+        CancellationToken cancellationToken)
     {
         var pendingSignup = pendingGoogleSignupService.Get(httpContext);
 
@@ -114,61 +116,35 @@ public class Auth : IEndpointGroup
             return TypedResults.BadRequest(new { error = "No pending Google signup found." });
         }
 
-        if (string.IsNullOrWhiteSpace(pendingSignup.Subject) ||
-            string.IsNullOrWhiteSpace(pendingSignup.Email))
-        {
-            return TypedResults.BadRequest(new { error = "Pending signup data is incomplete." });
-        }
-
         if (request is null || string.IsNullOrWhiteSpace(request.UserName))
         {
             return TypedResults.BadRequest(new { error = "Username is required." });
         }
 
-        var trimmedUserName = request.UserName.Trim();
-
-        var existingGoogleUser = await userManager.Users
-            .FirstOrDefaultAsync(u => u.GoogleSubject == pendingSignup.Subject);
-
-        if (existingGoogleUser is not null)
+        try
         {
-            return TypedResults.BadRequest(new { error = "This Google account is already linked." });
-        }
+            var response = await identityService.CreateGoogleUserAsync(
+                request.UserName,
+                pendingSignup,
+                cancellationToken);
 
-        var existingUserName = await userManager.FindByNameAsync(trimmedUserName);
-        if (existingUserName is not null)
-        {
-            return TypedResults.BadRequest(new { error = "Username is already taken." });
-        }
+            var user = await userManager.FindByIdAsync(response.UserId);
 
-        var user = new ApplicationUser
-        {
-            UserName = trimmedUserName,
-            Email = pendingSignup.Email,
-            EmailConfirmed = true,
-            GoogleSubject = pendingSignup.Subject,
-            GoogleEmail = pendingSignup.Email
-        };
-
-        var createResult = await userManager.CreateAsync(user);
-
-        if (!createResult.Succeeded)
-        {
-            return TypedResults.BadRequest(new
+            if (user is null)
             {
-                error = "Failed to create user.",
-                details = createResult.Errors.Select(e => e.Description)
-            });
+                return TypedResults.BadRequest(new { error = "Created user could not be found." });
+            }
+
+            pendingGoogleSignupService.Clear(httpContext);
+
+            await signInManager.SignInAsync(user, isPersistent: false);
+
+            return TypedResults.Ok(response);
         }
-
-        pendingGoogleSignupService.Clear(httpContext);
-
-        await signInManager.SignInAsync(user, isPersistent: false);
-
-        return TypedResults.Ok(new GoogleLoginResponse(
-            user.Id,
-            user.Email ?? string.Empty,
-            user.UserName ?? string.Empty));
+        catch (InvalidOperationException exception)
+        {
+            return TypedResults.BadRequest(new { error = exception.Message });
+        }
     }
 
     public static async Task<Results<Ok<GoogleLoginResponse>, UnauthorizedHttpResult>> GetCurrentUser(
