@@ -1,17 +1,14 @@
 using System.Security.Claims;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using todo_app_backend.Infrastructure.Identity;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.AspNetCore.WebUtilities;
 using System.Security.Cryptography;
 using System.Text.Json;
 using todo_app_backend.Application.Auth.Common.Models;
+using todo_app_backend.Application.Common.Interfaces;
 
 namespace todo_app_backend.Web.Endpoints;
 
@@ -27,16 +24,8 @@ public class Auth : IEndpointGroup
 
     public static RedirectHttpResult StartGoogleLogin(
         HttpContext httpContext,
-        IConfiguration configuration)
+        IGoogleAuthService googleAuthService)
     {
-        var clientId = configuration["Google:ClientId"];
-        var redirectUri = configuration["Google:RedirectUri"];
-
-        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUri))
-        {
-            throw new InvalidOperationException("Google OAuth configuration is missing.");
-        }
-
         var state = GenerateState();
 
         httpContext.Response.Cookies.Append(
@@ -51,34 +40,18 @@ public class Auth : IEndpointGroup
             }
         );
 
-        var scopes = new[]
-        {
-            "openid",
-            "email"
-        };
-
-        var queryParams = new Dictionary<string, string?>
-        {
-            ["client_id"] = clientId,
-            ["redirect_uri"] = redirectUri,
-            ["response_type"] = "code",
-            ["scope"] = string.Join(" ", scopes),
-            ["state"] = state
-        };
-
-        var authorizationUrl = QueryHelpers.AddQueryString(
-            "https://accounts.google.com/o/oauth2/v2/auth",
-            queryParams!);
+        var authorizationUrl = googleAuthService.BuildAuthorizationUrl(state);
 
         return TypedResults.Redirect(authorizationUrl);
     }
 
     public static async Task<IResult> GoogleCallback(
         HttpContext httpContext,
-        IConfiguration configuration,
-        HttpClient httpClient,
+        IGoogleAuthService googleAuthService,
         UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager)
+        SignInManager<ApplicationUser> signInManager,
+        IConfiguration configuration,
+        CancellationToken cancellationToken)
     {
         var code = httpContext.Request.Query["code"].ToString();
         var state = httpContext.Request.Query["state"].ToString();
@@ -103,45 +76,15 @@ public class Auth : IEndpointGroup
             return TypedResults.BadRequest("Authorization code is missing.");
         }
 
-        var form = new Dictionary<string, string?>
-        {
-            ["code"] = code,
-            ["client_id"] = configuration["Google:ClientId"],
-            ["client_secret"] = configuration["Google:ClientSecret"],
-            ["redirect_uri"] = configuration["Google:RedirectUri"],
-            ["grant_type"] = "authorization_code"
-        };
-
-        var content = new FormUrlEncodedContent(form);
-        var response = await httpClient.PostAsync("https://oauth2.googleapis.com/token", content);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var errorContent = await response.Content.ReadAsStringAsync();
-            return TypedResults.BadRequest(new { error = "Failed to exchange code for token.", details = errorContent });
-        }
-
-        var responseContent = await response.Content.ReadFromJsonAsync<GoogleTokenResponse>();
+        var responseContent = await googleAuthService.ExchangeCodeForTokenAsync(code, cancellationToken);
 
         if (responseContent is null || string.IsNullOrWhiteSpace(responseContent.AccessToken))
         {
             return TypedResults.BadRequest("Google token response was invalid.");
         }
 
-        var userInfoRequest = new HttpRequestMessage(
-            HttpMethod.Get,
-            "https://openidconnect.googleapis.com/v1/userinfo"
-        );
-        userInfoRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", responseContent.AccessToken);
+        var userInfo = await googleAuthService.GetUserInfoAsync(responseContent.AccessToken, cancellationToken);
 
-        var userInfoResponse = await httpClient.SendAsync(userInfoRequest);
-        if (!userInfoResponse.IsSuccessStatusCode)
-        {
-            var errorContent = await userInfoResponse.Content.ReadAsStringAsync();
-            return TypedResults.BadRequest(new { error = "Failed to fetch user information.", details = errorContent });
-        }
-
-        var userInfo = await userInfoResponse.Content.ReadFromJsonAsync<GoogleUserInfoResponse>();
         if (userInfo is null || string.IsNullOrWhiteSpace(userInfo.Email) || string.IsNullOrWhiteSpace(userInfo.Subject))
         {
             return TypedResults.BadRequest("Failed to parse user information.");
