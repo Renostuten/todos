@@ -73,8 +73,12 @@ export default function Dashboard() {
         <div className="todo-header-top">
           <h1>Todos</h1>
           <button
+            type="button"
             className="fab-btn"
-            onClick={() => setShowCreateListForm((prev) => !prev)}
+            onClick={(event) => {
+              event.preventDefault();
+              setShowCreateListForm((prev) => !prev);
+            }}
             aria-label={showCreateListForm ? "Hide create list form" : "Show create list form"}
           >
             {showCreateListForm ? "x" : "+"}
@@ -85,8 +89,10 @@ export default function Dashboard() {
           <div className="user-badge">
             Signed in as <strong>{currentUser.email}</strong>
             <button
+              type="button"
               className="logout-btn"
-              onClick={() => {
+              onClick={(event) => {
+                event.preventDefault();
                 void handleLogout();
               }}
             >

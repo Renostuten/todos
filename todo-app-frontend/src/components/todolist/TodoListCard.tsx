@@ -62,6 +62,7 @@ export default function TodoListCard({ list }: TodoListCardProps) {
   return (
     <div className="todo-list-card" style={{ borderColor: list.colour || "#4CAF50" }}>
       <button
+        type="button"
         onClick={(event) => {
           void handleDeleteList(event, list.id);
         }}
