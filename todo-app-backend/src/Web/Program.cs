@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+
 using todo_app_backend.Infrastructure.Data;
 using Scalar.AspNetCore;
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +14,27 @@ builder.AddKeyVaultIfConfigured();
 builder.AddApplicationServices();
 builder.AddInfrastructureServices();
 builder.AddWebServices();
+
+builder.Services
+    .AddAuthentication()
+    .AddOpenIdConnect(options =>
+    {
+        // Configure the authentication options
+        options.SignInScheme = IdentityConstants.ExternalScheme;
+        options.Authority = "https://accounts.google.com";
+        options.ClientId = builder.Configuration["Google:ClientId"];
+        options.ClientSecret = builder.Configuration["Google:ClientSecret"];
+        options.ResponseType = "code";
+
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("email");
+        options.Scope.Add("profile");
+
+        options.SaveTokens = true;
+
+        options.CallbackPath = "/api/auth/google/callback";
+    });
 
 var app = builder.Build();
 
