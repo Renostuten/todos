@@ -17,7 +17,7 @@ export default function Login({ onLoginError }: LoginProps) {
    */
   const handleGoogleLogin = () => {
     try {
-      window.location.href = `${API_BASE_URL}/auth/google/start`;
+      window.location.assign(`${API_BASE_URL}/auth/google/start`);
     } catch (error: unknown) {
       console.error(error);
       onLoginError?.("Failed to start Google login.");
