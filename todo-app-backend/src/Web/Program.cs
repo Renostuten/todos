@@ -34,6 +34,24 @@ builder.Services
         options.SaveTokens = true;
 
         options.CallbackPath = "/api/auth/google/callback";
+
+        options.Events = new OpenIdConnectEvents
+{
+            OnRemoteFailure = context =>
+            {
+                context.HandleResponse();
+
+                var configuration = context.HttpContext.RequestServices
+                    .GetRequiredService<IConfiguration>();
+
+                var frontendErrorUrl = configuration["FrontendAuthErrorUrl"];
+
+                context.Response.Redirect(
+                    $"{frontendErrorUrl}?code=google_login_failed");
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
 var app = builder.Build();

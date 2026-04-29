@@ -23,9 +23,16 @@ public class Auth : IEndpointGroup
         groupBuilder.MapGet(GetCurrentUser, "me");
     }
 
-    public static IResult StartGoogleLogin(
-        SignInManager<ApplicationUser> signInManager)
+    public static async Task<IResult> StartGoogleLogin(
+        SignInManager<ApplicationUser> signInManager,
+        IPendingGoogleSignupService pendingGoogleSignupService,
+        HttpContext httpContext)
     {
+
+        pendingGoogleSignupService.Clear(httpContext);
+
+        await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
         var properties = signInManager.ConfigureExternalAuthenticationProperties(
             OpenIdConnectDefaults.AuthenticationScheme,
             "/api/auth/google/finalcallback");
@@ -49,8 +56,7 @@ public class Auth : IEndpointGroup
         var info = await signInManager.GetExternalLoginInfoAsync();
         if (info is null)
         {
-            Console.WriteLine("No external login info.");
-            return TypedResults.Redirect(frontendOrigin);
+            return RedirectToAuthError(configuration, "external_login_info_missing");
         }
 
         var subject = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -59,8 +65,7 @@ public class Auth : IEndpointGroup
 
         if (string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(email))
         {
-            Console.WriteLine("Subject or email is missing.");
-            return TypedResults.Redirect(frontendOrigin);
+            return RedirectToAuthError(configuration, "missing_google_claims");
         }
 
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.GoogleSubject == subject);
@@ -153,5 +158,14 @@ public class Auth : IEndpointGroup
             currentUser.Id,
             currentUser.Email ?? string.Empty,
             currentUser.UserName ?? string.Empty));
+    }
+
+    private static IResult RedirectToAuthError(
+        IConfiguration configuration,
+        string code)
+    {
+        var errorUrl = configuration["FrontendAuthErrorUrl"];
+
+        return TypedResults.Redirect($"{errorUrl}?code={Uri.EscapeDataString(code)}");
     }
 }
