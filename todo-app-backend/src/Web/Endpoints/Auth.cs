@@ -55,13 +55,13 @@ public class Auth : IEndpointGroup
 
         if (currentUser is null)
         {
-            return TypedResults.Ok(
+            return TypedResults.Json(
                 new
                 {
-                    requirement = "signup",
-                    Email = email,
-                    EntraObjectId = entraObjectId
-                }
+                    error = "signup_required",
+                    email
+                },
+                statusCode: StatusCodes.Status409Conflict
             );
         }
         
