@@ -15,8 +15,12 @@ import {
 export async function getCurrentUser(): Promise<CurrentUser> {
   const response = await fetchWithCredentials(`${API_BASE_URL}/auth/me`);
 
+  if (response.status === 409) {
+    throw new Error("signup_required");
+  }
+
   if (!response.ok) {
-    throw new Error("Not authenticated");
+    throw new Error("unauthenticated");
   }
 
   return parseJsonResponse<CurrentUser>(response);
