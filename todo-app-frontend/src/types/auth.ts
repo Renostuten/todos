@@ -8,3 +8,9 @@ export interface SignupErrorResponse {
   error?: string;
   details?: string[] | string;
 }
+
+export type AuthStatus =
+  | "checking"
+  | "unauthenticated"
+  | "authenticated"
+  | "signupRequired";

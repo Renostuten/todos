@@ -9,13 +9,15 @@ import {
 } from "react";
 
 import { getCurrentUser, logoutCurrentUser } from "../services/authApi";
-import type { CurrentUser } from "../types/auth";
+import type { CurrentUser, AuthStatus } from "../types/auth";
 
 interface AuthContextValue {
   currentUser: CurrentUser | null;
   setCurrentUser: Dispatch<SetStateAction<CurrentUser | null>>;
   isCheckingSession: boolean;
   isAuthenticated: boolean;
+  authStatus: AuthStatus;
+  setAuthStatus: Dispatch<SetStateAction<AuthStatus>>;
   handleLoginSuccess: (user: CurrentUser) => void;
   handleLogout: () => Promise<void>;
   loginError: string;
@@ -38,6 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [loginError, setLoginError] = useState("");
+  const [authStatus, setAuthStatus] = useState<AuthStatus>("checking");
 
   useEffect(() => {
     /**
@@ -48,8 +51,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const user = await getCurrentUser();
         setCurrentUser(user);
         setLoginError("");
-      } catch {
+        setAuthStatus("authenticated");
+      } catch (error: unknown) {
         setCurrentUser(null);
+        if (error instanceof Error && error.message === "signup_required") {
+          setAuthStatus("signupRequired");
+        } else {
+          setAuthStatus("unauthenticated");
+        }
       } finally {
         setIsCheckingSession(false);
       }
@@ -66,6 +75,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   function handleLoginSuccess(user: CurrentUser) {
     setCurrentUser(user);
     setLoginError("");
+    setAuthStatus("authenticated");
   }
 
   /**
@@ -76,6 +86,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await logoutCurrentUser();
       setCurrentUser(null);
       setLoginError("");
+      setAuthStatus("unauthenticated");
     } catch (error: unknown) {
       console.error("Logout failed:", error);
     }
@@ -92,6 +103,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         handleLogout,
         loginError,
         setLoginError,
+        authStatus,
+        setAuthStatus,
       }}
     >
       {children}
