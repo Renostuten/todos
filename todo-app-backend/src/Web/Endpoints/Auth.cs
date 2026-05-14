@@ -85,7 +85,7 @@ public class Auth : IEndpointGroup
         }
 
         var currentUser = await userManager.Users.FirstOrDefaultAsync(u =>
-            u.Email == email);
+            u.Id == entraObjectId);
 
         if (currentUser is null)
         {
