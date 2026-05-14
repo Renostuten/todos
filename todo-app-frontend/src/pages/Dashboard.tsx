@@ -1,11 +1,11 @@
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import "../App.css";
 
 import Chart from "../components/analytics/Chart";
 import CreateListForm from "../components/todolist/CreateListForm";
 import Filter from "../components/todolist/Filter";
-import Login from "../components/auth/Login";
 import TodoListCard from "../components/todolist/TodoListCard";
 import { useAuth } from "../context/AuthContext";
 import { useTodos } from "../context/TodoContext";
@@ -17,7 +17,7 @@ import useTodoFilters from "../hooks/useTodoFilters";
 export default function Dashboard() {
   const [showCreateListForm, setShowCreateListForm] = useState(false);
 
-  const { currentUser, isCheckingSession, handleLogout, loginError, setLoginError } =
+  const { currentUser, isCheckingSession, handleLogout, loginError, setLoginError, authStatus } =
     useAuth();
   const { data, loading, error } = useTodos();
 
@@ -39,24 +39,29 @@ export default function Dashboard() {
     filteredLists,
   } = useTodoFilters(data?.lists ?? []);
 
-  if (isCheckingSession) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isCheckingSession) {
+      return;
+    }
+
+    if (authStatus === "signupRequired") {
+      navigate("/signup");
+      return;
+    }
+
+    if (authStatus === "unauthenticated") {
+      navigate("/login");
+    }
+  }, [authStatus, isCheckingSession, navigate]);
+
+  if (isCheckingSession || authStatus === "checking") {
     return <p>Checking sign-in status...</p>;
   }
 
   if (!currentUser) {
-    return (
-      <div className="todo-app login-page">
-        <div className="todo-header">
-          <div className="todo-header-top">
-            <h1>Sign in to continue</h1>
-          </div>
-          <div className="auth-row">
-            <Login onLoginError={setLoginError} />
-          </div>
-          {loginError && <div className="login-error">{loginError}</div>}
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (loading || !data) {
