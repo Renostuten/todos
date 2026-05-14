@@ -24,10 +24,44 @@ public class Auth : IEndpointGroup
     }
 
     public static async Task<IResult> CompleteSignup(
-
+        HttpContext httpContext,
+        UserManager<ApplicationUser> userManager
     )
     {
-        return TypedResults.Ok();
+        var principal = GetEasyAuthPrincipal(httpContext);
+
+        if (principal is null)
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var email = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+
+        var entraObjectId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(entraObjectId))
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var user = new ApplicationUser
+        {
+            UserName = email,
+            Email = email,
+            EntraObjectId = entraObjectId
+        };
+
+        var result = await userManager.CreateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            return TypedResults.BadRequest();
+        }
+
+        return TypedResults.Ok(new UserLoginResponse(
+            user.Id,
+            user.Email ?? string.Empty,
+            user.UserName ?? string.Empty));
     }
 
     public static async Task<IResult> GetCurrentUser(
