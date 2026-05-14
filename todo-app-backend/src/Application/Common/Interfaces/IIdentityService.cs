@@ -15,7 +15,7 @@ public interface IIdentityService
 
     Task<Result> DeleteUserAsync(string userId);
 
-    Task<GoogleLoginResponse> CreateGoogleUserAsync(
+    Task<UserLoginResponse> CreateGoogleUserAsync(
         string userName,
         PendingGoogleSignup pendingSignup,
         CancellationToken cancellationToken);

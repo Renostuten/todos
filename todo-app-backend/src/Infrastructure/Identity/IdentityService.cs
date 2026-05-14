@@ -80,7 +80,7 @@ public class IdentityService : IIdentityService
         return result.ToApplicationResult();
     }
 
-    public async Task<GoogleLoginResponse> CreateGoogleUserAsync(
+    public async Task<UserLoginResponse> CreateGoogleUserAsync(
         string userName,
         PendingGoogleSignup pendingSignup,
         CancellationToken cancellationToken)
@@ -133,7 +133,7 @@ public class IdentityService : IIdentityService
                 $"Failed to create user. {string.Join(", ", errors)}");
         }
 
-        return new GoogleLoginResponse(
+        return new UserLoginResponse(
             user.Id,
             user.Email ?? string.Empty,
             user.UserName ?? string.Empty);

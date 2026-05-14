@@ -5,7 +5,7 @@ using todo_app_backend.Application.Common.Interfaces;
 namespace todo_app_backend.Application.Auth.Commands.CompleteGoogleSignup;
 
 public sealed class CompleteGoogleSignupCommandHandler
-    : IRequestHandler<CompleteGoogleSignupCommand, GoogleLoginResponse>
+    : IRequestHandler<CompleteGoogleSignupCommand, UserLoginResponse>
 {
     private readonly IIdentityService _identityService;
 
@@ -14,7 +14,7 @@ public sealed class CompleteGoogleSignupCommandHandler
         _identityService = identityService;
     }
 
-    public async Task<GoogleLoginResponse> Handle(
+    public async Task<UserLoginResponse> Handle(
         CompleteGoogleSignupCommand request,
         CancellationToken cancellationToken)
     {

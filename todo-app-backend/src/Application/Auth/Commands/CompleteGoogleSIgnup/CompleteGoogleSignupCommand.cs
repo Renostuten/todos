@@ -5,4 +5,4 @@ namespace todo_app_backend.Application.Auth.Commands.CompleteGoogleSignup;
 
 public sealed record CompleteGoogleSignupCommand(
     string UserName,
-    PendingGoogleSignup PendingSignup) : IRequest<GoogleLoginResponse>;
+    PendingGoogleSignup PendingSignup) : IRequest<UserLoginResponse>;

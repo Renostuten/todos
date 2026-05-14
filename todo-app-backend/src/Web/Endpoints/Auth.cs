@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using todo_app_backend.Application.Auth.Common.Models;
 using todo_app_backend.Application.Common.Interfaces;
 using todo_app_backend.Web.Infrastructure.Authentication;
+using System.Text;
+using System.Text.Json;
 
 namespace todo_app_backend.Web.Endpoints;
 
@@ -17,155 +19,91 @@ public class Auth : IEndpointGroup
 {
     public static void Map(RouteGroupBuilder groupBuilder)
     {
-        groupBuilder.MapGet(StartGoogleLogin, "google/start");
-        groupBuilder.MapGet(GoogleCallback, "google/finalcallback");
         groupBuilder.MapPost(CompleteSignup, "signup");
         groupBuilder.MapGet(GetCurrentUser, "me");
     }
 
-    public static async Task<IResult> StartGoogleLogin(
-        SignInManager<ApplicationUser> signInManager,
-        IPendingGoogleSignupService pendingGoogleSignupService,
+    public static async Task<IResult> CompleteSignup(
+
+    )
+    {
+        return TypedResults.Ok();
+    }
+
+    public static async Task<IResult> GetCurrentUser(
+        UserManager<ApplicationUser> userManager,
         HttpContext httpContext)
     {
+        var principal = GetEasyAuthPrincipal(httpContext);
 
-        pendingGoogleSignupService.Clear(httpContext);
-
-        await httpContext.SignOutAsync(IdentityConstants.ExternalScheme);
-
-        var properties = signInManager.ConfigureExternalAuthenticationProperties(
-            OpenIdConnectDefaults.AuthenticationScheme,
-            "/api/auth/google/finalcallback");
-
-        return TypedResults.Challenge(
-            properties,
-            [OpenIdConnectDefaults.AuthenticationScheme]);
-    }   
-
-    public static async Task<IResult> GoogleCallback(
-        HttpContext httpContext,
-        IPendingGoogleSignupService pendingGoogleSignupService,
-        UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        IConfiguration configuration)
-    { 
-        Console.WriteLine("Google callback invoked.");
-        var frontendOrigin = configuration["FrontendOrigin"] ?? "http://localhost:5173";
-        var frontendSignupUrl = configuration["FrontendSignupUrl"] ?? "http://localhost:5173/signup";
-
-        var info = await signInManager.GetExternalLoginInfoAsync();
-        if (info is null)
+        if (principal is null)
         {
-            return RedirectToAuthError(configuration, "external_login_info_missing");
-        }
-
-        var subject = info.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
-        var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-        var name = info.Principal.FindFirstValue(ClaimTypes.Name);
-
-        if (string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(email))
-        {
-            return RedirectToAuthError(configuration, "missing_google_claims");
-        }
-
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.GoogleSubject == subject);
-        if (user is not null)
-        {            
-            await signInManager.SignInAsync(user, isPersistent: false);
-            return TypedResults.Redirect(frontendOrigin);
-        }
-
-        var pendingSignup = new PendingGoogleSignup
-        {
-            Subject = subject,
-            Email = email,
-            Name = name ?? email
-        };
-
-        pendingGoogleSignupService.Store(httpContext, pendingSignup);
-
-        return TypedResults.Redirect(frontendSignupUrl);
-    }
-
-    public static async Task<IResult> CompleteSignup(
-        HttpContext httpContext,
-        [FromBody] CompleteGoogleSignupRequest request,
-        IPendingGoogleSignupService pendingGoogleSignupService,
-        IIdentityService identityService,
-        UserManager<ApplicationUser> userManager,
-        SignInManager<ApplicationUser> signInManager,
-        CancellationToken cancellationToken)
-    {
-        var pendingSignup = pendingGoogleSignupService.Get(httpContext);
-
-        if (pendingSignup is null)
-        {
-            Console.WriteLine("No pending Google signup found.");
-            return TypedResults.BadRequest(new { error = "No pending Google signup found." });
-        }
-
-        if (request is null || string.IsNullOrWhiteSpace(request.UserName))
-        {
-            Console.WriteLine("Username is required.");
-            return TypedResults.BadRequest(new { error = "Username is required." });
-        }
-
-        try
-        {
-            var response = await identityService.CreateGoogleUserAsync(
-                request.UserName,
-                pendingSignup,
-                cancellationToken);
-
-            var user = await userManager.FindByIdAsync(response.UserId);
-
-            if (user is null)
-            {
-                Console.WriteLine("Created user could not be found.");
-                return TypedResults.BadRequest(new { error = "Created user could not be found." });
-            }
-
-            pendingGoogleSignupService.Clear(httpContext);
-
-            await signInManager.SignInAsync(user, isPersistent: false);
-
-            return TypedResults.Ok(response);
-        }
-        catch (InvalidOperationException exception)
-        {
-            return TypedResults.BadRequest(new { error = exception.Message });
-        }
-    }
-
-    public static async Task<Results<Ok<GoogleLoginResponse>, UnauthorizedHttpResult>> GetCurrentUser(
-        UserManager<ApplicationUser> userManager,
-        ClaimsPrincipal user)
-    {
-        if (user?.Identity?.IsAuthenticated != true)
-        {
-            Console.WriteLine("No authenticated user.");
             return TypedResults.Unauthorized();
         }
 
-        var currentUser = await userManager.GetUserAsync(user);
+        var email = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+
+        var entraObjectId = principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(entraObjectId))
+        {
+            return TypedResults.Unauthorized();
+        }
+
+        var currentUser = await userManager.Users.FirstOrDefaultAsync(u =>
+            u.Email == email);
+
         if (currentUser is null)
         {
-            Console.WriteLine("Authenticated user not found in database.");
-            return TypedResults.Unauthorized();
+            return TypedResults.Ok(
+                new
+                {
+                    requirement = "signup",
+                    Email = email,
+                    EntraObjectId = entraObjectId
+                }
+            );
         }
-
-        return TypedResults.Ok(new GoogleLoginResponse(
+        
+        return TypedResults.Ok(new UserLoginResponse(
             currentUser.Id,
             currentUser.Email ?? string.Empty,
             currentUser.UserName ?? string.Empty));
     }
 
-    private static IResult RedirectToAuthError(
-        IConfiguration configuration,
-        string code)
+    private static ClaimsPrincipal? GetEasyAuthPrincipal(HttpContext httpContext)
     {
-        var errorUrl = configuration["FrontendAuthErrorUrl"];
+        if (!httpContext.Request.Headers.TryGetValue("X-MS-CLIENT-PRINCIPAL", out var header))
+        {
+            return null;
+        }
 
-        return TypedResults.Redirect($"{errorUrl}?code={Uri.EscapeDataString(code)}");
+        var principalJson = Encoding.UTF8.GetString(Convert.FromBase64String(header.ToString()));
+
+        var easyAuthPrincipal = JsonSerializer.Deserialize<EasyAuthPrincipal>(principalJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+        if (easyAuthPrincipal?.Claims is null)
+        {
+            return null;
+        }
+
+        var claims = easyAuthPrincipal.Claims.Select(c => new Claim(c.Type, c.Value));
+        var identity = new ClaimsIdentity(claims, "EasyAuth");
+
+        return new ClaimsPrincipal(identity);
+    }
+
+    private sealed class EasyAuthPrincipal
+    {
+        public string? AuthTyp { get; set; }
+        public string? NameTyp { get; set; }
+        public string? RoleTyp { get; set; }
+        public List<EasyAuthClaim>? Claims { get; set; }
+    }
+
+    private sealed class EasyAuthClaim
+    {
+        public string Type { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
     }
 }
