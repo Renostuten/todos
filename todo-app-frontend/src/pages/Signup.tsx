@@ -1,7 +1,9 @@
-import { type ChangeEvent, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 import type * as React from "react";
 
 import { signupUser } from "../services/authApi";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 /**
  * Collects the username required to finish account creation after OAuth signup.
@@ -10,6 +12,20 @@ export default function Signup() {
   const [userName, setUserName] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { authStatus, isCheckingSession } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isCheckingSession) {
+      return;
+    }
+
+    if (authStatus !== "signupRequired") {
+      navigate("/");
+      return;
+    }
+  }, [authStatus, isCheckingSession, navigate]);
 
   /**
    * Submits the signup form to create the user's application profile, then returns to the dashboard.
@@ -37,6 +53,10 @@ export default function Signup() {
       setIsSubmitting(false);
     }
   };
+
+  if (isCheckingSession || authStatus !== "signupRequired") {
+    return <p>Checking signup access...</p>;
+  }
 
   return (
     <div className="signup-page">

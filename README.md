@@ -1,6 +1,6 @@
 # Todo App
 
-A full-stack todo application with Google sign-in, cookie-based sessions, user-scoped todo data, list filtering, and progress visualisation.
+A full-stack todo application with Microsoft Entra ID authentication through Azure App Service Easy Auth, user-scoped todo data, list filtering, and progress visualisation.
 
 The repository contains:
 
@@ -9,8 +9,9 @@ The repository contains:
 
 ## Current Highlights
 
-- Google OAuth login using a backend-driven redirect flow
-- Cookie-based authentication with session restore on refresh
+- Microsoft Entra ID sign-in through Azure App Service Easy Auth
+- Backend user lookup from the Easy Auth `X-MS-CLIENT-PRINCIPAL` header
+- Session restore on refresh through the backend `/api/auth/me` endpoint
 - User-specific todo lists and todo items
 - Todo list colours, due dates, and list editing
 - Todo item completion, priority, and notes
@@ -76,16 +77,17 @@ todo-app/
 
 ## Authentication Flow
 
-The app no longer uses the older frontend token-post approach.
+The app no longer uses Google OAuth. Authentication is handled by Azure App Service Easy Auth with Microsoft Entra ID.
 
 The current authentication flow is:
 
-1. The frontend sends the user to `GET /api/auth/google/start`
-2. The backend redirects to Google OAuth
-3. Google redirects back to `GET /api/auth/google/callback`
-4. The backend signs the user in with ASP.NET Identity cookies
-5. New users are redirected to `/signup` to complete username setup
-6. The frontend restores the current session through `GET /api/auth/me`
+1. The login page redirects the browser to `/.auth/login/aad`
+2. Azure App Service Easy Auth handles the Microsoft Entra ID sign-in flow
+3. Authenticated requests arrive at the backend with the Easy Auth `X-MS-CLIENT-PRINCIPAL` header
+4. The backend decodes that header in `GET /api/auth/me` to find the Entra user email and object id
+5. If the Entra user does not yet have an application user record, `/api/auth/me` returns `409` with `signup_required`
+6. The frontend sends the user to `/signup`, then calls `POST /api/auth/signup` to create the local app user
+7. The frontend restores the current session through `GET /api/auth/me`
 
 ## Core Frontend Architecture
 
@@ -123,7 +125,8 @@ The backend initialises the SQLite database automatically in development in `src
 
 - .NET SDK `10.0.201`
 - Node.js 18+ and npm
-- A Google Cloud OAuth client
+- An Azure App Service with Authentication enabled
+- A Microsoft Entra ID app registration configured for the App Service Easy Auth provider
 
 ## Local Setup
 
@@ -131,27 +134,23 @@ The backend initialises the SQLite database automatically in development in `src
 
 The backend reads configuration from `todo-app-backend/src/Web/appsettings.json` and `appsettings.Development.json`.
 
-At minimum, make sure the following values are correct for your machine and OAuth setup:
+At minimum, make sure the following values are correct for your machine:
 
 ```json
 {
   "ConnectionStrings": {
     "todo-app-backendDb": "DataSource=todo-app-backend.db;Cache=Shared"
   },
-  "Google": {
-    "ClientId": "your-google-client-id",
-    "RedirectUri": "http://localhost:5031/api/auth/google/callback"
-  },
-  "FrontendOrigin": "http://localhost:5173",
-  "FrontendSignupUrl": "http://localhost:5173/signup"
+  "FrontendOrigin": "http://localhost:5173"
 }
 ```
 
 Notes:
 
 - `FrontendOrigin` must match your frontend dev origin exactly
-- `Google:RedirectUri` must match the callback URL configured in Google Cloud
 - The backend currently defaults to `http://localhost:5173` for the frontend if `FrontendOrigin` is missing
+- Easy Auth is supplied by Azure App Service, not by the ASP.NET Core app itself
+- Local backend requests will not be authenticated unless you run behind an Easy Auth-compatible proxy or supply a valid `X-MS-CLIENT-PRINCIPAL` header for development testing
 
 ### 2. Frontend configuration
 
@@ -165,7 +164,17 @@ Example `.env` file for `todo-app-frontend`:
 VITE_API_BASE_URL=http://localhost:5031/api
 ```
 
-If `VITE_API_BASE_URL` is not set, the frontend falls back to `http://localhost:5031/api`.
+If `VITE_API_BASE_URL` is not set, the frontend falls back to `https://dash-internal-todo-d4hxg2epe9esekc2.australiaeast-01.azurewebsites.net/api`.
+
+The login page currently redirects to the deployed App Service Easy Auth endpoint:
+
+```text
+https://dash-internal-todo-d4hxg2epe9esekc2.australiaeast-01.azurewebsites.net/.auth/login/aad
+```
+
+One thing to note here is that this app is intended to only work on the deployed version, therefore if localhost is used, the app will not work.
+
+If you deploy to another App Service, update the login base URL in `todo-app-frontend/src/pages/Login.tsx`.
 
 ## Running the App
 
@@ -207,10 +216,12 @@ These are the main endpoint groups reflected in the current codebase.
 
 ### Auth
 
-- `GET /api/auth/google/start`
-- `GET /api/auth/google/callback`
 - `POST /api/auth/signup`
 - `GET /api/auth/me`
+
+Auth sign-in is initiated outside the API route group through Azure App Service Easy Auth:
+
+- `GET /.auth/login/aad`
 
 ### Users
 
@@ -304,15 +315,16 @@ dotnet publish -c Release -o ./publish
 - The frontend uses React context for auth and todo data state
 - Chart rendering is implemented with Recharts in `src/components/Chart.tsx`
 - The backend serves static files and maps a fallback to `index.html`
+- Some legacy Google-named types, CSS classes, and dependencies are still present in the repository, but the active sign-in path documented here is Microsoft Entra ID Easy Auth
 
 ## Troubleshooting
 
-### Google OAuth issues
+### Microsoft Entra ID / Easy Auth issues
 
-- Confirm the Google OAuth client has the correct authorised redirect URI:
-  - `http://localhost:5031/api/auth/google/callback`
-- Confirm the frontend origin is allowed in your backend config:
-  - `FrontendOrigin=http://localhost:5173`
+- Confirm Authentication is enabled on the Azure App Service
+- Confirm Microsoft is configured as the App Service authentication provider
+- Confirm the login page points at the correct App Service base URL before `/.auth/login/aad`
+- Confirm authenticated backend requests include the `X-MS-CLIENT-PRINCIPAL` header
 - Confirm the frontend is pointing at the correct backend:
   - `VITE_API_BASE_URL=http://localhost:5031/api`
 

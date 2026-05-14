@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
-import Login from "../components/auth//Login";
+import Login from "../pages/Login";
 
 describe("Login", () => {
   test("redirects to the backend Google OAuth start endpoint", async () => {

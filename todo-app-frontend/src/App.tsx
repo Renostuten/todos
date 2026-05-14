@@ -5,6 +5,7 @@ import { TodoProvider } from "./context/TodoContext";
 import Dashboard from "./pages/Dashboard";
 import Signup from "./pages/Signup";
 import Errors from "./pages/Errors";
+import Login from "./pages/Login";
 
 /**
  * Wires the frontend routes together under the shared auth and todo providers.
@@ -15,6 +16,7 @@ export default function App() {
       <TodoProvider>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth/error" element={<Errors />} />
         </Routes>
