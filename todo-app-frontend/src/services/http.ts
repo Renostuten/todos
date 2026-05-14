@@ -1,6 +1,6 @@
 import type { SignupErrorResponse } from "../types/auth";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5031/api";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "https://dash-internal-todo-d4hxg2epe9esekc2.australiaeast-01.azurewebsites.net/api";
 
 /**
  * Wraps fetch so API requests automatically include the authentication cookie/session.

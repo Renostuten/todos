@@ -164,7 +164,7 @@ Example `.env` file for `todo-app-frontend`:
 VITE_API_BASE_URL=http://localhost:5031/api
 ```
 
-If `VITE_API_BASE_URL` is not set, the frontend falls back to `http://localhost:5031/api`.
+If `VITE_API_BASE_URL` is not set, the frontend falls back to `https://dash-internal-todo-d4hxg2epe9esekc2.australiaeast-01.azurewebsites.net/api`.
 
 The login page currently redirects to the deployed App Service Easy Auth endpoint:
 
