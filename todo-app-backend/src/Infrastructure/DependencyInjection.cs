@@ -2,7 +2,6 @@
 using todo_app_backend.Infrastructure.Data;
 using todo_app_backend.Infrastructure.Data.Interceptors;
 using todo_app_backend.Infrastructure.Identity;
-using todo_app_backend.Infrastructure.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +59,5 @@ public static class DependencyInjection
 
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddTransient<IIdentityService, IdentityService>();
-        builder.Services.AddHttpClient<IGoogleAuthService, GoogleAuthService>();
     }
 }

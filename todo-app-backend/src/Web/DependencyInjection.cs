@@ -34,7 +34,6 @@ public static class DependencyInjection
         builder.Services.AddCors();
 
         builder.Services.AddScoped<IOAuthStateService, OAuthStateService>();
-        builder.Services.AddScoped<IPendingGoogleSignupService, PendingGoogleSignupService>();
     }
 
     public static void AddKeyVaultIfConfigured(this IHostApplicationBuilder builder)

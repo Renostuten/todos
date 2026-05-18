@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using todo_app_backend.Infrastructure.Identity;
 using Microsoft.AspNetCore.Http.HttpResults;
