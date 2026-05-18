@@ -19,31 +19,91 @@ public class UpdateTodoItemTests : TestBase
     {
         var userId = await TestApp.RunAsDefaultUserAsync();
 
-        var listId = await TestApp.SendAsync(new CreateTodoListCommand
+        var list = new TodoList
         {
             Title = "New List"
-        });
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
 
-        var itemId = await TestApp.SendAsync(new CreateTodoItemCommand
+        var item = new TodoItem
         {
             ListId = listId,
             Title = "New Item"
-        });
+        };
+        await TestApp.AddAsync(item);
+        var itemId = item.Id;
 
         var command = new UpdateTodoItemCommand
         {
             Id = itemId,
-            Title = "Updated Item Title"
+            Title = "Updated Item Title",
+            Done = true
         };
 
         await TestApp.SendAsync(command);
 
-        var item = await TestApp.FindAsync<TodoItem>(itemId);
+        item = await TestApp.FindAsync<TodoItem>(itemId);
 
         item.ShouldNotBeNull();
         item!.Title.ShouldBe(command.Title);
+        item.Done.ShouldBe(command.Done);
         item.LastModifiedBy.ShouldNotBeNull();
         item.LastModifiedBy.ShouldBe(userId);
         item.LastModified.ShouldBe(DateTime.Now, TimeSpan.FromMilliseconds(10000));
+    }
+
+    [Test]
+    public async Task ShouldNotUpdateTodoItemOfAnotherUser()
+    {
+        var userId = await TestApp.RunAsDefaultUserAsync();
+
+        var list = new TodoList
+        {
+            Title = "New List"
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
+
+        var item = new TodoItem
+        {
+            ListId = listId,
+            Title = "New Item"
+        };
+        await TestApp.AddAsync(item);
+        var itemId = item.Id;
+
+        var otheruserId = await TestApp.RunAsUserAsync("other@local", "Testing1234!", []);
+
+        var command = new UpdateTodoItemCommand
+        {
+            Id = itemId,
+            Title = "Updated Item Title",
+            Done = true
+        };
+
+        await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
+    }
+
+    [Test]
+    public async Task ShouldRequireExistingItem()
+    {
+        var userId = await TestApp.RunAsDefaultUserAsync();
+
+        var list = new TodoList
+        {
+            Title = "New List"
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
+
+        var command = new UpdateTodoItemCommand
+        {
+            Id = 999,
+            Title = "Updated Item Title",
+            Done = true
+        };
+
+        await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
     }
 }
