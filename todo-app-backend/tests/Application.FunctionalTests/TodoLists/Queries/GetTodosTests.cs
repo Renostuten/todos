@@ -48,6 +48,37 @@ public class GetTodosTests : TestBase
     }
 
     [Test]
+    public async Task ShouldNotReturnListsOfAnotherUser()
+    {
+        await TestApp.RunAsDefaultUserAsync();
+
+        var list = new TodoList
+        {
+            Title = "Shopping",
+            Colour = Colour.Blue,
+            Items =
+                {
+                    new TodoItem { Title = "Apples", Done = true },
+                    new TodoItem { Title = "Milk", Done = true },
+                    new TodoItem { Title = "Bread", Done = true },
+                    new TodoItem { Title = "Toilet paper" },
+                    new TodoItem { Title = "Pasta" },
+                    new TodoItem { Title = "Tissues" },
+                    new TodoItem { Title = "Tuna" }
+                }
+        };
+        await TestApp.AddAsync(list);
+
+        var otheruserId = await TestApp.RunAsUserAsync("other@local", "Testing1234!", []);
+
+        var query = new GetTodosQuery();
+
+        var result = await TestApp.SendAsync(query);
+
+        result.Lists.Count.ShouldBe(0);
+    }
+
+    [Test]
     public async Task ShouldDenyAnonymousUser()
     {
         var query = new GetTodosQuery();
