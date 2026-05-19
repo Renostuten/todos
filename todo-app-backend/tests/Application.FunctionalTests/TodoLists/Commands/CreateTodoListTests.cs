@@ -1,6 +1,7 @@
 ﻿using todo_app_backend.Application.Common.Exceptions;
 using todo_app_backend.Application.TodoLists.Commands.CreateTodoList;
 using todo_app_backend.Domain.Entities;
+using todo_app_backend.Domain.Exceptions;
 
 namespace todo_app_backend.Application.FunctionalTests.TodoLists.Commands;
 
@@ -36,7 +37,9 @@ public class CreateTodoListTests : TestBase
 
         var command = new CreateTodoListCommand
         {
-            Title = "Tasks"
+            Title = "Tasks",
+            Colour = Domain.ValueObjects.Colour.Red,
+            DueDate = DateTime.Today.AddDays(7)
         };
 
         var id = await TestApp.SendAsync(command);
@@ -46,6 +49,8 @@ public class CreateTodoListTests : TestBase
         list.ShouldNotBeNull();
         list!.Title.ShouldBe(command.Title);
         list.CreatedBy.ShouldBe(userId);
+        list.Colour.ToString().ShouldBe(command.Colour);
+        list.DueDate.ShouldBe(command.DueDate);
         list.Created.ShouldBe(DateTime.Now, TimeSpan.FromMilliseconds(10000));
     }
 
@@ -103,6 +108,31 @@ public class CreateTodoListTests : TestBase
         list.ShouldNotBeNull();
         list!.Title.ShouldBe(command.Title);
         list.CreatedBy.ShouldBe(userId2);
+    }
+
+    [Test]
+    public async Task ShouldNotAllowInvalidColour()
+    {
+        var userId = await TestApp.RunAsDefaultUserAsync();
+
+        var command = new CreateTodoListCommand
+        {
+            Title = "Shopping",
+            Colour = "InvalidColour"
+        };
+
+        await Should.ThrowAsync<UnsupportedColourException>(() => TestApp.SendAsync(command));
+    }
+
+    [Test]
+    public async Task ShouldNotAllowEmptyTitle()
+    {
+        var command = new CreateTodoListCommand
+        {
+            Title = string.Empty
+        };
+
+        await Should.ThrowAsync<ValidationException>(() => TestApp.SendAsync(command));
     }
 }
 
