@@ -2,7 +2,6 @@ using todo_app_backend.Application.TodoLists.Commands.CreateTodoList;
 using todo_app_backend.Application.TodoLists.Commands.DeleteTodoList;
 using todo_app_backend.Application.TodoLists.Commands.UpdateTodoList;
 using todo_app_backend.Application.TodoLists.Queries.GetTodos;
-using todo_app_backend.Application.TodoLists.Queries.GetTodoListById;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace todo_app_backend.Web.Endpoints;
@@ -14,7 +13,6 @@ public class TodoLists : IEndpointGroup
         groupBuilder.RequireAuthorization();
 
         groupBuilder.MapGet(GetTodoLists);
-        groupBuilder.MapGet(GetTodoListById, "{id}");
         groupBuilder.MapPost(CreateTodoList);
         groupBuilder.MapPut(UpdateTodoList, "{id}");
         groupBuilder.MapDelete(DeleteTodoList, "{id}");
@@ -27,20 +25,6 @@ public class TodoLists : IEndpointGroup
         var vm = await sender.Send(new GetTodosQuery());
 
         return TypedResults.Ok(vm);
-    }
-
-    [EndpointSummary("Get Todo List by ID")]
-    [EndpointDescription("Retrieves a specific todo list and its items by ID.")]
-    public static async Task<Results<Ok<TodoListDto>, NotFound>> GetTodoListById(ISender sender, int id)
-    {
-        var todoList = await sender.Send(new GetTodoListByIdQuery(id));
-
-        if (todoList is null)
-        {
-            return TypedResults.NotFound();
-        }
-
-        return TypedResults.Ok(todoList);
     }
 
     [EndpointSummary("Create a new Todo List")]
