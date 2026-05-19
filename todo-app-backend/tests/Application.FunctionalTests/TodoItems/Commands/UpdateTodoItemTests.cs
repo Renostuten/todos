@@ -84,26 +84,4 @@ public class UpdateTodoItemTests : TestBase
 
         await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
     }
-
-    [Test]
-    public async Task ShouldRequireExistingItem()
-    {
-        var userId = await TestApp.RunAsDefaultUserAsync();
-
-        var list = new TodoList
-        {
-            Title = "New List"
-        };
-        await TestApp.AddAsync(list);
-        var listId = list.Id;
-
-        var command = new UpdateTodoItemCommand
-        {
-            Id = 999,
-            Title = "Updated Item Title",
-            Done = true
-        };
-
-        await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
-    }
 }
