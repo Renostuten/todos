@@ -18,21 +18,52 @@ public class DeleteTodoItemTests : TestBase
     [Test]
     public async Task ShouldDeleteTodoItem()
     {
-        var listId = await TestApp.SendAsync(new CreateTodoListCommand
+        var userId = await TestApp.RunAsDefaultUserAsync();
+
+        var list = new TodoList
         {
             Title = "New List"
-        });
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
 
-        var itemId = await TestApp.SendAsync(new CreateTodoItemCommand
+        var item = new TodoItem
         {
             ListId = listId,
             Title = "New Item"
-        });
+        };
+        await TestApp.AddAsync(item);
+        var itemId = item.Id;
 
         await TestApp.SendAsync(new DeleteTodoItemCommand(itemId));
 
-        var item = await TestApp.FindAsync<TodoItem>(itemId);
+        item = await TestApp.FindAsync<TodoItem>(itemId);
 
         item.ShouldBeNull();
+    }
+
+    [Test]
+    public async Task ShouldNotDeleteTodoItemOfAnotherUser()
+    {
+        var userId = await TestApp.RunAsDefaultUserAsync();
+
+        var list = new TodoList
+        {
+            Title = "New List"
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
+
+        var item = new TodoItem
+        {
+            ListId = listId,
+            Title = "New Item"
+        };
+        await TestApp.AddAsync(item);
+        var itemId = item.Id;
+
+        var otheruserId = await TestApp.RunAsUserAsync("other@local", "Testing1234!", []);
+
+        await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(new DeleteTodoItemCommand(itemId)));
     }
 }
