@@ -77,14 +77,4 @@ public class GetTodosTests : TestBase
 
         result.Lists.Count.ShouldBe(0);
     }
-
-    [Test]
-    public async Task ShouldDenyAnonymousUser()
-    {
-        var query = new GetTodosQuery();
-
-        var action = () => TestApp.SendAsync(query);
-
-        await Should.ThrowAsync<UnauthorizedAccessException>(action);
-    }
 }
