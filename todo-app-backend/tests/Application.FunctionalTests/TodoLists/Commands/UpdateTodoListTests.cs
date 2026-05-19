@@ -17,15 +17,20 @@ public class UpdateTodoListTests : TestBase
     [Test]
     public async Task ShouldRequireUniqueTitle()
     {
-        var listId = await TestApp.SendAsync(new CreateTodoListCommand
+        await TestApp.RunAsDefaultUserAsync();
+
+        var list = new TodoList
         {
             Title = "New List"
-        });
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
 
-        await TestApp.SendAsync(new CreateTodoListCommand
+        var list2 = new TodoList
         {
             Title = "Other List"
-        });
+        };
+        await TestApp.AddAsync(list2);
 
         var command = new UpdateTodoListCommand
         {
@@ -40,14 +45,16 @@ public class UpdateTodoListTests : TestBase
     }
 
     [Test]
-    public async Task ShouldUpdateTodoList()
+    public async Task ShouldUpdateTodoListMandatoryFields()
     {
         var userId = await TestApp.RunAsDefaultUserAsync();
 
-        var listId = await TestApp.SendAsync(new CreateTodoListCommand
+        var list = new TodoList
         {
             Title = "New List"
-        });
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
 
         var command = new UpdateTodoListCommand
         {
@@ -57,12 +64,64 @@ public class UpdateTodoListTests : TestBase
 
         await TestApp.SendAsync(command);
 
-        var list = await TestApp.FindAsync<TodoList>(listId);
+        list = await TestApp.FindAsync<TodoList>(listId);
 
         list.ShouldNotBeNull();
         list!.Title.ShouldBe(command.Title);
         list.LastModifiedBy.ShouldNotBeNull();
         list.LastModifiedBy.ShouldBe(userId);
         list.LastModified.ShouldBe(DateTime.Now, TimeSpan.FromMilliseconds(10000));
+    }
+
+    [Test]
+    public async Task ShouldUpdateTodoListOptionalFields()
+    {
+        var userId = await TestApp.RunAsDefaultUserAsync();
+
+        var list = new TodoList
+        {
+            Title = "New List"
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
+
+        var command = new UpdateTodoListCommand
+        {
+            Id = listId,
+            Title = "Updated List Title",
+            Colour = Domain.ValueObjects.Colour.Red,
+            DueDate = DateTime.Today.AddDays(7)
+        };
+
+        await TestApp.SendAsync(command);
+
+        list = await TestApp.FindAsync<TodoList>(listId);
+
+        list.ShouldNotBeNull();
+        list!.Colour.ToString().ShouldBe(command.Colour);
+        list.DueDate.ShouldBe(command.DueDate);
+    }
+
+    [Test]
+    public async Task ShouldNotUpdateTodoListOfAnotherUser()
+    {
+        await TestApp.RunAsDefaultUserAsync();
+
+        var list = new TodoList
+        {
+            Title = "New List"
+        };
+        await TestApp.AddAsync(list);
+        var listId = list.Id;
+
+        await TestApp.RunAsUserAsync("other@local", "Testing1234!", []);
+
+        var command = new UpdateTodoListCommand
+        {
+            Id = listId,
+            Title = "Updated List Title"
+        };
+
+        await Should.ThrowAsync<NotFoundException>(() => TestApp.SendAsync(command));
     }
 }
