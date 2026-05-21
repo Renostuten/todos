@@ -45,7 +45,15 @@ export default function Signup() {
     setIsSubmitting(true);
 
     try {
-      await signupUser(userName);
+      const trimmedUserName = userName.trim();
+
+      if (!trimmedUserName) {
+        setError("Username is required.");
+        return;
+      }
+
+      await signupUser(trimmedUserName);
+      
       window.location.href = "/";
     } catch (caughtError: unknown) {
       console.error(caughtError);
