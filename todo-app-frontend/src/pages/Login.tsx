@@ -1,7 +1,7 @@
 import { useAuth } from "../context/AuthContext";
 
 const API_BASE_URL =
-  "https://dash-internal-todo-d4hxg2epe9esekc2.australiaeast-01.azurewebsites.net/";
+  "https://dash-internal-todo-d4hxg2epe9esekc2.australiaeast-01.azurewebsites.net";
 
 /**
  * Renders the Google sign-in button and starts the backend OAuth flow when clicked.
