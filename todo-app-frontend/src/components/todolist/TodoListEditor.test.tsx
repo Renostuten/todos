@@ -56,10 +56,6 @@ function renderTodoListEditor(
 }
 
 describe("TodoListEditor", () => {
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("renders update list and add todo buttons", () => {
     renderTodoListEditor();
 
