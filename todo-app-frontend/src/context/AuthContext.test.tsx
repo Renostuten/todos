@@ -50,10 +50,6 @@ function TestConsumer() {
 }
 
 describe("AuthProvider", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("restores authenticated user on load", async () => {
     mockGetCurrentUser.mockResolvedValue({
       userId: "1",

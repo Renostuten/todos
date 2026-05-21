@@ -28,7 +28,6 @@ const mockSignupUser = vi.mocked(signupUser);
 
 describe("Signup", () => {
   afterEach(() => {
-    vi.clearAllMocks();
     mockAuthStatus = "signupRequired";
     mockIsCheckingSession = false;
   });

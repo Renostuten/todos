@@ -106,8 +106,6 @@ vi.mock("../components/todolist/TodoListCard", () => ({
 
 describe("Dashboard", () => {
   afterEach(() => {
-    vi.clearAllMocks();
-
     mockAuth = {
       currentUser: {
         userId: "1",
